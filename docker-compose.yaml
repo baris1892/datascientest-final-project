@@ -1,0 +1,18 @@
+services:
+  petclinic-rest:
+    build:
+      context: ./petclinic-rest
+      dockerfile: Dockerfile
+    container_name: petclinic-rest
+    ports:
+      - "9966:9966"
+
+  petclinic-angular:
+    build:
+      context: ./petclinic-angular
+      dockerfile: Dockerfile
+    container_name: petclinic-angular
+    ports:
+      - "4200:8080"
+    depends_on:
+      - petclinic-rest
