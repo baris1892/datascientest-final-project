@@ -6,6 +6,15 @@ services:
     container_name: petclinic-rest
     ports:
       - "9966:9966"
+    environment:
+      - SPRING_PROFILES_ACTIVE=postgres,spring-data-jpa
+      # We point the backend to the db container name
+      - POSTGRES_URL=jdbc:postgresql://petclinic-db:5432/petclinic
+      - POSTGRES_USER=petclinic
+      - POSTGRES_PASS=petclinic
+    depends_on:
+      petclinic-db:
+        condition: service_healthy
 
   petclinic-angular:
     build:
@@ -16,3 +25,18 @@ services:
       - "4200:8080"
     depends_on:
       - petclinic-rest
+
+  petclinic-db:
+    image: postgres:16-alpine
+    container_name: petclinic-db
+    environment:
+      - POSTGRES_DB=petclinic
+      - POSTGRES_USER=petclinic
+      - POSTGRES_PASSWORD=petclinic
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U petclinic" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
