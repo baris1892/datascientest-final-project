@@ -33,6 +33,8 @@ services:
       - POSTGRES_DB=petclinic
       - POSTGRES_USER=petclinic
       - POSTGRES_PASSWORD=petclinic
+    volumes:
+      - petclinic-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
@@ -40,3 +42,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+volumes:
+  petclinic-data:
