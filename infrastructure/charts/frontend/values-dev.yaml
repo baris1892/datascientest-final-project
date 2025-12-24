@@ -1,0 +1,3 @@
+replicaCount: 1
+backendUrl: "http://54.194.36.52:30001/petclinic/api/"
+# backendUrl: "http://dev-petclinic.example.com/api/"

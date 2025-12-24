@@ -1,0 +1,16 @@
+# Default values for database.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+# TODO: store username+password secure
+postgres:
+  image: postgres:16-alpine
+  pullPolicy: IfNotPresent
+  username: petclinic
+  password: petclinic
+  db: petclinic
+  storage: 1Gi
