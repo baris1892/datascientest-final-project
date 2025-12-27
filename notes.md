@@ -37,6 +37,10 @@ helm upgrade --install database charts/database \
 
 # list all helm deployments
 helm list -n dev
+
+# trigger rollout
+kubectl -n dev rollout restart deployment frontend
+
 ```
 
 ##### angular app: assets/env.js

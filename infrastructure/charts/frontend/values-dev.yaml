@@ -1,5 +1,5 @@
 replicaCount: 1
 
 env:
-  REST_API_URL: "http://108.129.124.132:30001/petclinic/api/TEST"
+  REST_API_URL: "http://34.244.242.232:30001/petclinic/api/"
 #  REST_API_URL: "http://dev-petclinic.example.com/api/"
