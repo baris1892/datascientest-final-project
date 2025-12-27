@@ -14,10 +14,7 @@ docker push baris1892/datascientest-final-project-petclinic-angular:latest
 
 ```
 # helm upgrade frontend
-helm upgrade --install frontend ./frontend \
-  -f ./frontend/values.yaml \
-  -f ./frontend/values-dev.yaml \
-  --namespace dev
+helm upgrade --install frontend ./frontend -f frontend/values.yaml -f frontend/values-dev.yaml -n dev
 
 # helm upgrade backend
 helm upgrade --install backend ./backend -f backend/values.yaml -f backend/values-dev.yaml -n dev
@@ -85,6 +82,3 @@ Check values after deploying k8s secret:
 ```
 kubectl get secret database-db-secret -n dev -o json | jq -r '.data | map_values(@base64d)'
 ```
-
-
-
