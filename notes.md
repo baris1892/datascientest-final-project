@@ -13,17 +13,14 @@ docker push baris1892/datascientest-final-project-petclinic-angular:latest
 ##### helm commands
 
 ```
-helm upgrade --install frontend ./frontend --namespace dev
-helm upgrade --install database ./database --namespace dev
-helm upgrade --install backend  ./backend  --namespace dev
-
-
 # helm upgrade frontend
 helm upgrade --install frontend ./frontend \
   -f ./frontend/values.yaml \
   -f ./frontend/values-dev.yaml \
   --namespace dev
 
+# helm upgrade backend
+helm upgrade --install backend ./backend -f backend/values.yaml -f backend/values-dev.yaml -n dev
 
 # optionally remove database-db-secret so it is properly updated: 
 kubectl delete secret database-db-secret -n dev
@@ -38,7 +35,7 @@ helm upgrade --install database charts/database \
 # list all helm deployments
 helm list -n dev
 
-# trigger rollout
+# trigger rollout (needed after updating e.g. config map like frontend assets/env.js)
 kubectl -n dev rollout restart deployment frontend
 
 ```
