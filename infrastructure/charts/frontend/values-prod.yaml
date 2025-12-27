@@ -1,0 +1,16 @@
+replicaCount: 1
+
+env:
+  REST_API_URL: "https://api.baris.cloud-ip.cc/petclinic/api/"
+
+ingress:
+  hosts:
+    - host: baris.cloud-ip.cc
+      paths:
+        - path: /
+          pathType: Prefix
+
+  tls:
+    - secretName: frontend-prod-tls
+      hosts:
+        - baris.cloud-ip.cc

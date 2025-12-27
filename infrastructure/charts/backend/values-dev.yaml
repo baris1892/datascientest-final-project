@@ -1,3 +1,5 @@
+replicaCount: 1
+
 ingress:
   hosts:
     - host: dev-api.baris.cloud-ip.cc

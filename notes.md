@@ -14,20 +14,20 @@ docker push baris1892/datascientest-final-project-petclinic-angular:latest
 
 ```
 # helm upgrade frontend
-helm upgrade --install frontend ./frontend -f frontend/values.yaml -f frontend/values-dev.yaml -n dev
+helm upgrade --install frontend ./frontend -f frontend/values.yaml -f frontend/values-dev.yaml  -n dev
+helm upgrade --install frontend ./frontend -f frontend/values.yaml -f frontend/values-prod.yaml -n prod
 
 # helm upgrade backend
-helm upgrade --install backend ./backend -f backend/values.yaml -f backend/values-dev.yaml -n dev
+helm upgrade --install backend ./backend -f backend/values.yaml -f backend/values-dev.yaml  -n dev
+helm upgrade --install backend ./backend -f backend/values.yaml -f backend/values-prod.yaml -n prod
 
 # optionally remove database-db-secret so it is properly updated: 
 kubectl delete secret database-db-secret -n dev
+kubectl delete secret database-db-secret -n prod
 
 # helm upgrade database for dev with secrets
-sops -d charts/database/values-secrets-dev.yaml | \
-helm upgrade --install database charts/database \
-  -f charts/database/values.yaml \
-  -f - \
-  --namespace dev
+sops -d database/values-secrets-dev.yaml  | helm upgrade --install database database -f database/values.yaml -f - -n dev
+sops -d database/values-secrets-prod.yaml | helm upgrade --install database database -f database/values.yaml -f - -n prod
 
 # list all helm deployments
 helm list -n dev
@@ -74,7 +74,8 @@ chmod 600 ~/.config/sops/age/keys.txt
 encrypt file:
 
 ```
-sops -e -i charts/database/secrets-dev.yaml
+sops -e -i charts/database/values-secrets-dev.yaml
+sops -e -i charts/database/values-secrets-prod.yaml
 ```
 
 Check values after deploying k8s secret:
