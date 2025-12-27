@@ -53,7 +53,7 @@ spec:
                   name: database-db-secret
                   key: POSTGRES_USER
 
-            - name: POSTGRES_PASSWORD
+            - name: POSTGRES_PASS
               valueFrom:
                 secretKeyRef:
                   name: database-db-secret

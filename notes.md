@@ -18,15 +18,25 @@ helm upgrade --install database ./database --namespace dev
 helm upgrade --install backend  ./backend  --namespace dev
 
 
+# helm upgrade frontend
 helm upgrade --install frontend ./frontend \
   -f ./frontend/values.yaml \
   -f ./frontend/values-dev.yaml \
   --namespace dev
 
 
+# optionally remove database-db-secret so it is properly updated: 
+kubectl delete secret database-db-secret -n dev
 
+# helm upgrade database for dev with secrets
+sops -d charts/database/values-secrets-dev.yaml | \
+helm upgrade --install database charts/database \
+  -f charts/database/values.yaml \
+  -f - \
+  --namespace dev
+
+# list all helm deployments
 helm list -n dev
-
 ```
 
 ##### angular app: assets/env.js
@@ -36,4 +46,44 @@ to be able to have different env vars for our angular app, we've used
 
 However, the `assets/env.js` will be overriden via k8s ConfigMap so we can inject
 dynamically different `REST_API_URL`.
+
+##### SOPS
+
+Install sops:
+
+```
+curl -Lo sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.amd64
+chmod +x sops
+sudo mv sops /usr/local/bin/
+```
+
+Install age (for key generation):
+
+```
+sudo apt install -y age
+```
+
+Configure Age Key:
+
+```
+mkdir -p ~/.config/sops/age
+
+echo "AGE-SECRET-KEY-XXX" > ~/.config/sops/age/keys.txt
+
+chmod 600 ~/.config/sops/age/keys.txt
+```
+
+encrypt file:
+
+```
+sops -e -i charts/database/secrets-dev.yaml
+```
+
+Check values after deploying k8s secret:
+
+```
+kubectl get secret database-db-secret -n dev -o json | jq -r '.data | map_values(@base64d)'
+```
+
+
 

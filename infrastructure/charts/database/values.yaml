@@ -6,11 +6,7 @@
 nameOverride: ""
 fullnameOverride: ""
 
-# TODO: store username+password secure
 postgres:
   image: postgres:16-alpine
   pullPolicy: IfNotPresent
-  username: petclinic
-  password: petclinic
-  db: petclinic
   storage: 1Gi
