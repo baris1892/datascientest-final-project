@@ -5,5 +5,6 @@ metadata:
 data:
   env.js: |
     window.__env = {
-        REST_API_URL: "{{ .Values.env.REST_API_URL }}"
+        REST_API_URL: "{{ .Values.env.REST_API_URL }}",
+        ENV_NAME: "{{ .Values.env.ENV_NAME }}"
     };

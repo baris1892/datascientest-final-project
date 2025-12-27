@@ -22,5 +22,6 @@
 
 export const environment = {
   production: true,
-  REST_API_URL: (window as any).__env?.REST_API_URL
+  REST_API_URL: (window as any).__env?.REST_API_URL,
+  ENV_NAME: (window as any).__env?.ENV_NAME
 };

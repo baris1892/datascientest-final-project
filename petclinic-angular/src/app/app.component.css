@@ -41,7 +41,7 @@ div.navbar-header {
   position: fixed;
   bottom: 0;
   width: 100%;
-  height: 8rem;
+  height: 11rem;
 }
 
 @media screen and (max-width: 768px) {

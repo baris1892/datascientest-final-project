@@ -2,6 +2,7 @@ replicaCount: 1
 
 env:
   REST_API_URL: "https://dev-api.baris.cloud-ip.cc/petclinic/api/"
+  ENV_NAME: "dev"
 
 ingress:
   hosts:
