@@ -1,3 +1,5 @@
 replicaCount: 1
-backendUrl: "http://54.194.36.52:30001/petclinic/api/"
-# backendUrl: "http://dev-petclinic.example.com/api/"
+
+env:
+  REST_API_URL: "http://108.129.124.132:30001/petclinic/api/TEST"
+#  REST_API_URL: "http://dev-petclinic.example.com/api/"

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "frontend.fullname" . }}-config
+data:
+  env.js: |
+    window.__env = {
+        REST_API_URL: "{{ .Values.env.REST_API_URL }}"
+    };

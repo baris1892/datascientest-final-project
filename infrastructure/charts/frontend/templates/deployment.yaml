@@ -40,9 +40,6 @@ spec:
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          env:
-            - name: REST_API_URL
-              value: {{ .Values.backendUrl | quote }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -59,14 +56,14 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.volumeMounts }}
           volumeMounts:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-      {{- with .Values.volumes }}
+            - name: frontend-config
+              mountPath: /usr/share/nginx/html/assets/env.js
+              subPath: env.js
       volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        - name: frontend-config
+          configMap:
+            name: {{ include "frontend.fullname" . }}-config
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
