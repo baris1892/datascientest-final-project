@@ -150,3 +150,8 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+database:
+  host: database-db
+  port: 5432
+  name: petclinic

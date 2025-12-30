@@ -45,7 +45,7 @@ spec:
               value: "postgres,spring-data-jpa"
 
             - name: POSTGRES_URL
-              value: "jdbc:postgresql://database-db:5432/petclinic"
+              value: "jdbc:postgresql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}"
 
             - name: POSTGRES_USER
               valueFrom:
