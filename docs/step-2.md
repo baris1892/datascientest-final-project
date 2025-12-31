@@ -57,6 +57,8 @@
 - Let’s Encrypt integration is not yet implemented due to k3s Traefik constraints.
 - **Status: TODO / In discussion with project mentor**
 - **Planned improvement: Proper HTTPS termination using Let’s Encrypt (or cert-manager)**
+- Questions:
+    - k3s without traefik pre installed => install own traefik to get TLS/Let's Encrypt running?
 
 ---
 
@@ -78,3 +80,5 @@
     - Database backup strategy
     - Backup storage location
     - Restore and recovery procedures
+- Questions:
+    - DB Recovery Plan (where to store DB Dump? AWS S3? )
