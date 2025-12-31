@@ -1,0 +1,15 @@
+# Terraform State files
+*.tfstate
+*.tfstate.*
+
+# Terraform Secret files
+*.tfvars
+*.tfvars.json
+
+# Crash log files
+crash.log
+
+# Ignore the .terraform directory (e.g., used for provider plugins)
+.terraform/
+
+**/.terraform.lock.hcl
