@@ -1,5 +1,5 @@
 variable "namespace" {
-  default = "dev"
+  default = "prod"
 }
 
 resource "kubernetes_namespace" "this" {
@@ -14,7 +14,7 @@ resource "helm_release" "frontend" {
   namespace = var.namespace
   values = [
     file("../../charts/frontend/values.yaml"),
-    file("../../charts/frontend/values-dev.yaml")
+    file("../../charts/frontend/values-prod.yaml")
   ]
 }
 
@@ -24,12 +24,12 @@ resource "helm_release" "backend" {
   namespace = var.namespace
   values = [
     file("../../charts/backend/values.yaml"),
-    file("../../charts/backend/values-dev.yaml")
+    file("../../charts/backend/values-prod.yaml")
   ]
 }
 
 data "sops_file" "database_secrets" {
-  source_file = "../../charts/database/values-secrets-dev.yaml"
+  source_file = "../../charts/database/values-secrets-prod.yaml"
 }
 
 resource "helm_release" "database" {
