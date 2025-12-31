@@ -1,5 +1,5 @@
 variable "namespace" {
-  default = "dev"
+  default = "prod"
 }
 
 resource "kubernetes_namespace" "this" {
@@ -9,7 +9,7 @@ resource "kubernetes_namespace" "this" {
 }
 
 data "sops_file" "database" {
-  source_file = "../../charts/database/values-secrets-dev.yaml"
+  source_file = "../../charts/database/values-secrets-prod.yaml"
 }
 
 module "app" {
@@ -19,12 +19,12 @@ module "app" {
 
   frontend_values = [
     file("../../charts/frontend/values.yaml"),
-    file("../../charts/frontend/values-dev.yaml")
+    file("../../charts/frontend/values-prod.yaml")
   ]
 
   backend_values = [
     file("../../charts/backend/values.yaml"),
-    file("../../charts/backend/values-dev.yaml")
+    file("../../charts/backend/values-prod.yaml")
   ]
 
   database_values_file = "../../charts/database/values.yaml"
