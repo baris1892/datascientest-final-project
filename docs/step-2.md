@@ -81,4 +81,14 @@
     - Backup storage location
     - Restore and recovery procedures
 - Questions:
-    - DB Recovery Plan (where to store DB Dump? AWS S3? )
+    - DB Recovery Plan (where to store DB Dump? AWS S3?)
+
+---
+
+### 7. Frontend environment configuration
+
+- To inject environment-specific variables into the Angular frontend, a dynamic `assets/env.js` file is used
+- This file is referenced in `petclinic-angular/src/environments/environment.prod.ts`
+- In Kubernetes, the `assets/env.js` is overridden via a ConfigMap per environment
+- Example: `REST_API_URL` is dynamically injected for dev / prod environments
+- This approach avoids hardcoding environment variables in the application and enables reusable deployments
