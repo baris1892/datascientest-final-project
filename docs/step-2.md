@@ -52,13 +52,21 @@
 
 ### 4. Security with encrypted protocols
 
-- The cluster uses the default Traefik installation provided by k3s.
-- TLS certificates are currently managed by Traefik default certificates.
-- Let’s Encrypt integration is not yet implemented due to k3s Traefik constraints.
-- **Status: TODO / In discussion with project mentor**
-- **Planned improvement: Proper HTTPS termination using Let’s Encrypt (or cert-manager)**
-- Questions:
-    - k3s without traefik pre installed => install own traefik to get TLS/Let's Encrypt running?
+- Custom Ingress Controller: Deactivated k3s default Traefik to gain full control via a custom Helm-based Traefik
+  installation; command used during installation:
+
+```
+curl -sfL https://get.k3s.io | sh -s - \
+  --disable traefik \
+  --write-kubeconfig-mode 644
+```
+
+- Automated Certificate Management: Integrated cert-manager to handle the full lifecycle of TLS certificates
+- Let's Encrypt Integration: Implemented ACME (HTTP-01) challenges using a ClusterIssuer for automated domain validation
+- Environment Strategy:
+    - Currently using Let's Encrypt Staging environment for all environment (dev/prod) to avoid API rate limits
+    - Configuration is "Production-ready": Switching to the Production Issuer only requires a single annotation change.
+- Protocol Security: Automated HTTP-to-HTTPS redirection is enforced at the Ingress level
 
 ---
 
@@ -73,15 +81,16 @@
 
 ---
 
-### 6. Backup management & disaster recovery
+### 6. Backup management & disaster recovery (**Status: TODO**)
 
-- **Status: TODO** (unclear requirements)
+- unclear requirements  
+  => DB dumps can be stored on VM for demo purposes (in real world we would store it externally e.g. AWS S3)  
+  => Recovery from a dump can be documented for demo purposes
+
 - Planned topics to address:
     - Database backup strategy
     - Backup storage location
     - Restore and recovery procedures
-- Questions:
-    - DB Recovery Plan (where to store DB Dump? AWS S3?)
 
 ---
 

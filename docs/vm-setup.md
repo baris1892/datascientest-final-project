@@ -1,4 +1,4 @@
-#### Install k3s without pre-installed traefik and serviceLB (load balancer):
+#### Install k3s without pre-installed traefik:
 
 ```
 curl -sfL https://get.k3s.io | sh -s - \
@@ -53,16 +53,4 @@ cd infra
 terraform init
 terraform apply
 kubectl apply -f infra/issuers-staging.yaml
-```
-
----
-
-###### Other Notes
-
-- Remove terraform state on VM:  
-  Inside desired folder execute:
-
-```
-rm -rf .terraform
-rm -rf .terraform.lock.hcl
 ```
