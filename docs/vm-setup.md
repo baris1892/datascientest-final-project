@@ -52,7 +52,7 @@ sudo chmod +x /usr/local/bin/sops
 cd infra
 terraform init
 terraform apply
-kubectl apply -f infra/issuers.yaml
+kubectl apply -f infra/issuers-staging.yaml
 ```
 
 ---

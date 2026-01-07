@@ -5,44 +5,14 @@ env:
   ENV_NAME: "dev"
 
 ingress:
-  enabled: true
-  className: traefik
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt"
-    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-staging
   hosts:
     - host: dev.baris.cloud-ip.cc
       paths:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: frontend-dev-tls # Muss mit dem Namen oben übereinstimmen
+    - secretName: frontend-dev-tls
       hosts:
         - dev.baris.cloud-ip.cc
-
-# WORKS V1
-#ingress:
-#  className: traefik
-#  annotations:
-#    traefik.ingress.kubernetes.io/router.tls: "false"
-#    traefik.ingress.kubernetes.io/router.tls.certresolver: ""
-#    traefik.ingress.kubernetes.io/redirect-entry-point: ""
-#  hosts:
-#    - host: dev.baris.cloud-ip.cc
-#      paths:
-#        - path: /
-#          pathType: Prefix
-
-#ingress:
-#  className: traefik
-#  #  annotations:
-#  #    cert-manager.io/cluster-issuer: letsencrypt
-#  hosts:
-#    - host: dev.baris.cloud-ip.cc
-#      paths:
-#        - path: /
-#          pathType: Prefix
-##  tls:
-##    - secretName: frontend-dev-tls
-##      hosts:
-##        - dev.baris.cloud-ip.cc

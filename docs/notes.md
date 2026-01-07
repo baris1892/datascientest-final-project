@@ -44,3 +44,8 @@ to be able to have different env vars for our angular app, we've used
 
 However, the `assets/env.js` will be overriden via k8s ConfigMap so we can inject
 dynamically different `REST_API_URL`.
+
+
+##### Useful commands
+cd environments/dev/; terraform apply --auto-approve; cd ../../infra; terraform apply --auto-approve; cd ..
+cd environments/prod/; terraform apply --auto-approve; cd ../../infra; terraform apply --auto-approve; cd ..

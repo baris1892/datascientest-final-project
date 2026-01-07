@@ -6,7 +6,7 @@ env:
 
 ingress:
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt
+    cert-manager.io/cluster-issuer: letsencrypt-staging
   hosts:
     - host: baris.cloud-ip.cc
       paths:
