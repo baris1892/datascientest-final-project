@@ -5,12 +5,13 @@ env:
   ENV_NAME: "prod"
 
 ingress:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
   hosts:
     - host: baris.cloud-ip.cc
       paths:
         - path: /
           pathType: Prefix
-
   tls:
     - secretName: frontend-prod-tls
       hosts:
