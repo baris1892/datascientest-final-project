@@ -108,5 +108,12 @@ kubectl apply -f argocd/app-of-apps.yaml
 kubectl -n argocd get applications
 
 # force refresh
-kubectl -n argocd annotate application root argocd.argoproj.io/refresh=hard --overwrite
+kubectl -n argocd annotate application root         argocd.argoproj.io/refresh=hard --overwrite
+kubectl -n argocd annotate application frontend-dev argocd.argoproj.io/refresh=hard --overwrite
+
+# describe argocd application
+kubectl -n argocd describe applications frontend-dev
+
+# get deployed image
+kubectl -n dev get deploy frontend -o=jsonpath='{.spec.template.spec.containers[0].image}{"\n"}' 
 ```
