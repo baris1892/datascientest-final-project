@@ -104,6 +104,9 @@ kubectl apply -f issuers-staging.yaml
 cd infrastructure
 kubectl apply -f argocd/app-of-apps.yaml
 
-# debug commands
+# show argocd registered application
 kubectl -n argocd get applications
+
+# force refresh
+kubectl -n argocd annotate application root argocd.argoproj.io/refresh=hard --overwrite
 ```
