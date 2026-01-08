@@ -13,12 +13,10 @@ terraform {
 
 provider "kubernetes" {
   config_path    = "~/.kube/config" # path to Kubernetes configuration file
-  # config_context = "microservices"  # the context used for the workloads to be deployed
 }
 
 provider "helm" {
   kubernetes {
     config_path    = "~/.kube/config"
-    # config_context = "microservices"
   }
 }

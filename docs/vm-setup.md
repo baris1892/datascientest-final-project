@@ -1,3 +1,28 @@
+## Setup for Proxmox VM
+
+Run the following commands in Proxmox VM.
+
+#### Install docker
+
+```
+# Update package index
+apt update
+
+# Install prerequisite packages
+apt install -y apt-transport-https ca-certificates curl gnupg lsb-release software-properties-common
+
+# Install Docker from Debian’s default repo
+apt install -y docker.io
+
+# Verify Docker installation
+docker --version
+
+# Enable and start Docker service
+systemctl enable docker
+systemctl start docker
+systemctl status docker
+```
+
 #### Install k3s without pre-installed traefik:
 
 ```
@@ -6,8 +31,8 @@ curl -sfL https://get.k3s.io | sh -s - \
   --write-kubeconfig-mode 644
   
 mkdir -p ~/.kube
-sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
-sudo chown $USER:$USER ~/.kube/config
+cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+chown $USER:$USER ~/.kube/config
 ```
 
 ---
@@ -15,8 +40,25 @@ sudo chown $USER:$USER ~/.kube/config
 #### Install Terraform
 
 ```
-sudo snap install terraform --classic
+# Set version variable
+TERRAFORM_VERSION="1.10.3"
+
+# Download Terraform binary
+curl -LO https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+
+# Install unzip if not present
+apt update
+apt install -y unzip
+
+# Unzip and move to /usr/local/bin
+unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+mv terraform /usr/local/bin/
+
+# Verify installation
 terraform -version
+
+# Clean up
+rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
 ```
 
 ---
@@ -26,8 +68,8 @@ terraform -version
 Age is necessary for SOPS decryption
 
 ```
-sudo apt update
-sudo apt install -y age
+apt update
+apt install -y age
 age --version
 
 mkdir -p ~/.config/sops/age
@@ -38,10 +80,9 @@ chmod 600 ~/.config/sops/age/keys.txt
 #### Install SOPS
 
 ```
-cd /tmp
 curl -L -o sops-v3.11.0.linux.amd64 https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.amd64
-sudo mv sops-v3.11.0.linux.amd64 /usr/local/bin/sops
-sudo chmod +x /usr/local/bin/sops
+mv sops-v3.11.0.linux.amd64 /usr/local/bin/sops
+chmod +x /usr/local/bin/sops
 ```
 
 ---
@@ -52,5 +93,5 @@ sudo chmod +x /usr/local/bin/sops
 cd infra
 terraform init
 terraform apply
-kubectl apply -f infra/issuers-staging.yaml
+kubectl apply -f issuers-staging.yaml
 ```
