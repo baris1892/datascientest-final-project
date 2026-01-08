@@ -1,3 +1,8 @@
+image:
+  repository: baris1892/datascientest-final-project-petclinic-angular
+  pullPolicy: Always
+  tag: "latest"
+
 replicaCount: 1
 
 env:
