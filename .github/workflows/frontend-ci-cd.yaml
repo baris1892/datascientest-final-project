@@ -31,7 +31,7 @@ jobs:
           cache-dependency-path: './petclinic-angular/package-lock.json'
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       #- name: Lint Code
       #  run: npm run lint
