@@ -11,6 +11,7 @@ spec:
     targetRevision: master
     path: infrastructure/charts/frontend
     helm:
+      releaseName: frontend
       valueFiles:
         - values-dev.yaml
 
