@@ -101,5 +101,9 @@ kubectl apply -f issuers-staging.yaml
 #### Execute ArgoCD `app-of-apps.yaml`
 
 ```
-kubectl apply -f infra/argocd/app-of-apps.yaml
+cd infrastructure
+kubectl apply -f argocd/app-of-apps.yaml
+
+# debug commands
+kubectl -n argocd get applications
 ```

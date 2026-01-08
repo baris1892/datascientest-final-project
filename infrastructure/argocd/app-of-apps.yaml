@@ -8,7 +8,7 @@ spec:
 
   source:
     repoURL: https://github.com/baris1892/datascientest-final-project.git
-    targetRevision: main
+    targetRevision: master
     path: infrastructure/argocd/applications
 
   destination:
