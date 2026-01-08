@@ -101,18 +101,18 @@ httpRoute:
 
 resources:
   requests:
-    cpu: 200m
-    memory: 256Mi
-  limits:
     cpu: 500m
     memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
   httpGet:
     path: /petclinic/actuator/health
     port: 9966
-  initialDelaySeconds: 60
+  initialDelaySeconds: 120
   periodSeconds: 10
   timeoutSeconds: 5
 
@@ -120,7 +120,7 @@ readinessProbe:
   httpGet:
     path: /petclinic/actuator/health
     port: 9966
-  initialDelaySeconds: 60
+  initialDelaySeconds: 120
   periodSeconds: 5
   timeoutSeconds: 5
 
