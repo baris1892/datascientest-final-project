@@ -1,3 +1,7 @@
+image:
+  repository: baris1892/datascientest-final-project-petclinic-rest
+  pullPolicy: Always
+  tag: "v0.0.5"
 replicaCount: 2
 ingress:
   annotations:
@@ -13,5 +17,3 @@ ingress:
     - secretName: backend-prod-tls
       hosts:
         - api.baris.cloud-ip.cc
-image:
-  tag: v0.0.5
