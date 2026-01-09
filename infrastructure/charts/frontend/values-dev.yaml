@@ -1,7 +1,7 @@
 image:
   repository: baris1892/datascientest-final-project-petclinic-angular
   pullPolicy: Always
-  tag: "c3b83bb6f01da3d118323f2556ab5b826ff180b2"
+  tag: "f141ce31b3e7310e2148dfe124bc6409b54bacec"
 replicaCount: 1
 env:
   REST_API_URL: "https://dev-api.baris.cloud-ip.cc/petclinic/api/"
