@@ -1,18 +1,14 @@
 image:
   repository: baris1892/datascientest-final-project-petclinic-angular
   pullPolicy: Always
-  tag: "latest"
-
+  tag: "v0.0.5"
 replicaCount: 1
-
 env:
   REST_API_URL: "https://api.baris.cloud-ip.cc/petclinic/api/"
   ENV_NAME: "prod"
-
 ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-staging
-
     # for prod we would use the following (which doesn't work due to rate limiting)
     #cert-manager.io/cluster-issuer: letsencrypt-prod
   hosts:

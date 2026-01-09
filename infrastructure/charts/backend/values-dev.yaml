@@ -1,3 +1,8 @@
+image:
+  repository: baris1892/datascientest-final-project-petclinic-rest
+  pullPolicy: Always
+  tag: "v0.0.5"
+
 replicaCount: 1
 
 ingress:

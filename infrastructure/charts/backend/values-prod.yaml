@@ -1,9 +1,11 @@
-replicaCount: 2
-
+image:
+  repository: baris1892/datascientest-final-project-petclinic-rest
+  pullPolicy: Always
+  tag: "v0.0.5"
+replicaCount: 1
 ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-staging
-
     # for prod we would use the following (which doesn't work due to rate limiting)
     #cert-manager.io/cluster-issuer: letsencrypt-prod
   hosts:
