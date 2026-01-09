@@ -2,13 +2,17 @@ name: Frontend CI/CD
 
 on:
   push:
+    # 1. Trigger for DEV: Only on develop and only if FE code changed
     branches:
       - develop
-      - master
+    paths:
+      - 'petclinic-angular/**'
+
+  # 2. Trigger for PROD: Always on version tags, regardless of paths
+  # This allows you to tag ANY commit and trigger a release
+  create:
     tags:
-      - 'v*' # Triggers on tags starting with 'v', e.g., v1.0.0
-#    paths:
-#      - 'petclinic-angular/**' # Only trigger if frontend code changes
+      - 'v*'
 
 jobs:
   # 1. TEST JOB
