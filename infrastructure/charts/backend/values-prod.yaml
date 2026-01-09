@@ -1,9 +1,7 @@
 replicaCount: 2
-
 ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-staging
-
     # for prod we would use the following (which doesn't work due to rate limiting)
     #cert-manager.io/cluster-issuer: letsencrypt-prod
   hosts:
@@ -15,3 +13,5 @@ ingress:
     - secretName: backend-prod-tls
       hosts:
         - api.baris.cloud-ip.cc
+image:
+  tag: v0.0.5
