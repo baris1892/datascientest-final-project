@@ -64,7 +64,7 @@ jobs:
     if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     environment:
-      name: dev
+      name: frontend-dev
       url: https://dev.baris.cloud-ip.cc
     steps:
       - name: Checkout Repository
@@ -108,7 +108,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment: # This environment triggers the manual approval in GitHub UI
-      name: prod
+      name: frontend-prod
       url: https://baris.cloud-ip.cc
     steps:
       - name: Checkout Master Branch
