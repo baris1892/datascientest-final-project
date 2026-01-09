@@ -41,11 +41,13 @@
 - No direct NodePort exposure for application services
 - Environment-based domain routing:
     - DEV
-        - Frontend: https://dev.baris.cloud-ip.cc
-        - Backend API: https://dev-api.baris.cloud-ip.cc
+      - Frontend: https://dev.baris.cloud-ip.cc
+      - Backend API: https://dev-api.baris.cloud-ip.cc
     - PROD
-        - Frontend: https://baris.cloud-ip.cc
-        - Backend API: https://api.baris.cloud-ip.cc
+      - Frontend: https://baris.cloud-ip.cc
+      - Backend API: https://api.baris.cloud-ip.cc
+    - OTHER
+      - ArgoCD: https://argocd.baris.cloud-ip.cc 
 - This setup ensures controlled access and clean separation between environments
 
 ---

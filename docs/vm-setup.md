@@ -115,5 +115,8 @@ kubectl -n argocd annotate application frontend-dev argocd.argoproj.io/refresh=h
 kubectl -n argocd describe applications frontend-dev
 
 # get deployed image
-kubectl -n dev get deploy frontend -o=jsonpath='{.spec.template.spec.containers[0].image}{"\n"}' 
+kubectl -n dev get deploy frontend -o=jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+
+# get argocd UI password (username is always 'admin')
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d 
 ```
