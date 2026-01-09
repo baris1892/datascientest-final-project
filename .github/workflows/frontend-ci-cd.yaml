@@ -59,7 +59,7 @@ jobs:
   # 3. DEPLOY TO DEV
   # Automatically updates the dev manifest on every push to develop branch
   deploy-dev:
-    name: Update Dev Manifest
+    name: Update Frontend Dev Manifest
     needs: [ test, build ]
     if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
@@ -100,7 +100,7 @@ jobs:
   # 4. DEPLOY TO PROD (with approval flow)
   # Only triggers when a git tag 'v*' is pushed
   deploy-prod:
-    name: Update Prod Manifest (Approval Required)
+    name: Update Frontend Prod Manifest (Approval Required)
     needs: [ test, build, release-info ]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -122,5 +122,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add infrastructure/charts/frontend/values-prod.yaml
-          git commit -m "chore(prod): release ${{ github.ref_name }} [skip ci]"
+          git commit -m "chore(prod): release frontend ${{ github.ref_name }} [skip ci]"
           git push origin master

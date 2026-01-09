@@ -89,7 +89,7 @@ jobs:
 
   # 4. DEPLOY TO PROD (Approval Required)
   deploy-prod:
-    name: Update Backend Prod Manifest
+    name: Update Backend Prod Manifest (Approval Required)
     needs: [ test, build, release-info ]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
