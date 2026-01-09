@@ -63,6 +63,9 @@ jobs:
     needs: [ test, build ]
     if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
+    environment:
+      name: dev
+      url: https://dev.baris.cloud-ip.cc
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -104,7 +107,9 @@ jobs:
     needs: [ test, build, release-info ]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    environment: prod # This environment triggers the manual approval in GitHub UI
+    environment: # This environment triggers the manual approval in GitHub UI
+      name: prod
+      url: https://baris.cloud-ip.cc
     steps:
       - name: Checkout Master Branch
         uses: actions/checkout@v4

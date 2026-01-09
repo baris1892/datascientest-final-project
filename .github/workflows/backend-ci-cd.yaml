@@ -53,6 +53,9 @@ jobs:
     needs: [ test, build ]
     if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
+    environment:
+      name: dev
+      url: https://dev-api.baris.cloud-ip.cc/petclinic
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -93,7 +96,9 @@ jobs:
     needs: [ test, build, release-info ]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    environment: prod
+    environment:
+      name: prod
+      url: https://api.baris.cloud-ip.cc/petclinic
     steps:
       - name: Checkout Master Branch
         uses: actions/checkout@v4
