@@ -1,12 +1,12 @@
-name: Frontend CI/CD
+name: Backend CI/CD
 
 on:
   push:
-    # 1. Trigger for DEV: Only on develop and only if FE code changed
+    # 1. Trigger for DEV: Only on develop and only if BE code changed
     branches:
       - develop
     paths:
-      - 'petclinic-angular/**'
+      - 'petclinic-rest/**'
 
   # 2. Trigger for PROD: Always on version tags, regardless of paths
   # This allows you to tag ANY commit and trigger a release
@@ -15,51 +15,41 @@ on:
       - 'v*'
 
 jobs:
-  # 1. TEST JOB
-  # Runs on every push to ensure code quality
+  # 1. TEST JOB (Java/Maven)
   test:
-    name: Run Unit Tests
+    name: Run Backend Tests
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./petclinic-angular
+        working-directory: ./petclinic-rest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: './petclinic-angular/package-lock.json'
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Install Dependencies
-        run: npm ci
-
-      #- name: Lint Code
-      #  run: npm run lint
-
-      - name: Run Headless Tests
-        run: npm run test-headless
+      - name: Run Tests with Maven
+        run: ./mvnw test
 
   # 2. BUILD JOB
-  # Uses the reusable workflow to build and push the Docker image
   build:
-    name: Build and Push Docker Image
+    name: Build and Push Backend Image
     needs: test
     uses: ./.github/workflows/_docker-build.yml
     with:
-      image_name: baris1892/datascientest-final-project-petclinic-angular
-      # Logic: If it's a tag, use tag name; otherwise use commit SHA
+      image_name: baris1892/datascientest-final-project-petclinic-rest
       tag: ${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
-      context: ./petclinic-angular
+      context: ./petclinic-rest
     secrets: inherit
 
   # 3. DEPLOY TO DEV
-  # Automatically updates the dev manifest on every push to develop branch
   deploy-dev:
-    name: Update Dev Manifest
+    name: Update Backend Dev Manifest
     needs: [ test, build ]
     if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
@@ -67,18 +57,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.MY_GITHUB_TOKEN }} # Needed to bypass branch protection
+          token: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Update values-dev.yaml
         run: |
-          yq -i '.image.tag = "${{ github.sha }}"' infrastructure/charts/frontend/values-dev.yaml
+          yq -i '.image.tag = "${{ github.sha }}"' infrastructure/charts/backend/values-dev.yaml
 
       - name: Commit and Push to Develop
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add infrastructure/charts/frontend/values-dev.yaml
-          git commit -m "chore(dev): update frontend image tag to ${{ github.sha }} [skip ci]"
+          git add infrastructure/charts/backend/values-dev.yaml
+          git commit -m "chore(dev): update backend image tag to ${{ github.sha }} [skip ci]"
           git push origin develop
 
   release-info:
@@ -97,30 +87,28 @@ jobs:
           echo "| **Actor** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Commit** | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
 
-  # 4. DEPLOY TO PROD (with approval flow)
-  # Only triggers when a git tag 'v*' is pushed
+  # 4. DEPLOY TO PROD (Approval Required)
   deploy-prod:
-    name: Update Prod Manifest (Approval Required)
+    name: Update Backend Prod Manifest
     needs: [ test, build, release-info ]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    environment: prod # This environment triggers the manual approval in GitHub UI
+    environment: prod
     steps:
       - name: Checkout Master Branch
         uses: actions/checkout@v4
         with:
-          ref: master # We must update the master branch for GitOps
+          ref: master
           token: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Update values-prod.yaml
         run: |
-          # Use the tag name (e.g. v1.0.0) from the trigger
-          yq -i '.image.tag = "${{ github.ref_name }}"' infrastructure/charts/frontend/values-prod.yaml
+          yq -i '.image.tag = "${{ github.ref_name }}"' infrastructure/charts/backend/values-prod.yaml
 
       - name: Commit and Push to Master
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add infrastructure/charts/frontend/values-prod.yaml
-          git commit -m "chore(prod): release ${{ github.ref_name }} [skip ci]"
+          git add infrastructure/charts/backend/values-prod.yaml
+          git commit -m "chore(prod): release backend ${{ github.ref_name }} [skip ci]"
           git push origin master
