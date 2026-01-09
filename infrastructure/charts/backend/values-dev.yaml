@@ -1,10 +1,8 @@
 image:
   repository: baris1892/datascientest-final-project-petclinic-rest
   pullPolicy: Always
-  tag: "v0.0.5"
-
+  tag: "32be5e0fbae1ced41af902f853917d69c9f6f588"
 replicaCount: 1
-
 ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-staging
