@@ -90,6 +90,13 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod # This environment triggers the manual approval in GitHub UI
     steps:
+      - name: Summary
+        run: |
+          echo "### 🚀 Deployment Info" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** Production" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
       - name: Checkout Master Branch
         uses: actions/checkout@v4
         with:
