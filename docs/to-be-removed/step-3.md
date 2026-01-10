@@ -80,23 +80,6 @@ Outcome
 
 ---
 
-### 4. Schedule application data backup (TODO/unclear requirements)
-
-Backup strategy (project scope)
-
-- Logical backups using pg_dump
-- Backup execution planned via Kubernetes CronJob
-
-Backup characteristics
-
-- Periodic database dumps
-- Stored as compressed artifacts
-- Backup approach is simple, transparent, and reproducible
-
-Production note
-In a production environment, backups would be stored on external object storage and automated with retention policies.
----
-
 ### 5. Set up access rights
 
 Secrets management

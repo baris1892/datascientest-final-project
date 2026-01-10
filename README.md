@@ -25,4 +25,14 @@ Code** (Terraform) principles.
 
 ## Documentation
 
-Please refer to the [docs](/docs) folder for architecture, setup, and implementation details.
+Detailed documentation is available in the [Documentation Guide](/docs/project-documentation.md):
+
+- [1. Overview of the app](/docs/project-documentation.md#1-overview-of-the-app)
+- [2. Architecture Diagram](/docs/project-documentation.md#2-architecture-diagram)
+- [3. Tech Stack](/docs/project-documentation.md#3-tech-stack)
+- [4. Setup Steps](/docs/project-documentation.md#4-setup-steps)
+- [5. How to deploy dev & prod](/docs/project-documentation.md#5-how-to-deploy-dev--prod)
+- [6. CI/CD](/docs/project-documentation.md#6-cicd)
+- [7. Monitoring](/docs/project-documentation.md#7-monitoring)
+- [8. Security](/docs/project-documentation.md#8-security)
+- [9. Disaster Recovery](/docs/project-documentation.md#9-disaster-recovery)
