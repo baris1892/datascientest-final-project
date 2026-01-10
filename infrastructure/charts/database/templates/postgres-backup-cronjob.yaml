@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "database.fullname" . }}-backup
+spec:
+  schedule: "0 2 * * *" # Runs every day at 02:00 AM
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: postgres-backup
+              image: {{ .Values.postgres.image }}
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  # Exit immediately if a command exits with a non-zero status
+                  set -e
+
+                  # Configuration
+                  RETENTION_DAYS={{ .Values.retentionDays }}
+
+                  echo "Starting database backup..."
+                  # Create backup filename with timestamp
+                  TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
+
+                  # "/backup" because of volumeMounts
+                  FILENAME="/backup/db_dump_${TIMESTAMP}.sql.gz"
+
+                  # Execute pg_dump
+                  # -h points to the Kubernetes service name of the database
+                  # PGPASSWORD environment variable is automatically used by pg_dump
+                  pg_dump -h {{ include "database.fullname" . }}-db -U $POSTGRES_USER $POSTGRES_DB | gzip > $FILENAME
+
+                  echo "Backup successfully created: $FILENAME"
+
+                  # Retention: Delete backup files older than specified days
+                  echo "Cleaning up backups older than ${RETENTION_DAYS} days..."
+                  find /backup -type f -mtime +${RETENTION_DAYS} -name "*.sql.gz" -delete
+                  echo "Cleanup process finished."
+              env:
+                - name: POSTGRES_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "database.fullname" . }}-db-secret
+                      key: POSTGRES_USER
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "database.fullname" . }}-db-secret
+                      key: POSTGRES_PASSWORD
+                - name: POSTGRES_DB
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "database.fullname" . }}-db-secret
+                      key: POSTGRES_DB
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+            - name: backup-storage
+              hostPath:
+                path: /home/backups/database # Location on Proxmox VM
+                type: DirectoryOrCreate
