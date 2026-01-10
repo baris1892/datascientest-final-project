@@ -7,12 +7,10 @@ practices, including containerization, infrastructure as code, orchestration, an
 
 ## Deployment Status
 
-| Service      | Environment | Status                                                                                                                            | URL                                                    |
-|:-------------|:------------|:----------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------------------------|
-| **Frontend** | Production  | ![Prod Status](https://img.shields.io/github/deployments/baris1892/datascientest-final-project/frontend-prod?label=frontend-prod) | [Frontend PROD](https://baris.cloud-ip.cc)             |
-|              | Development | ![Dev Status](https://img.shields.io/github/deployments/baris1892/datascientest-final-project/frontend-dev?label=frontend-dev)    | [Frontend DEV](https://dev.baris.cloud-ip.cc)          |
-| **Backend**  | Production  | ![Prod Status](https://img.shields.io/github/deployments/baris1892/datascientest-final-project/backend-prod?label=backend-prod)   | [API PROD](https://api.baris.cloud-ip.cc/petclinic)    |
-|              | Development | ![Dev Status](https://img.shields.io/github/deployments/baris1892/datascientest-final-project/backend-dev?label=backend-dev)      | [API DEV](https://dev-api.baris.cloud-ip.cc/petclinic) |
+| Service      | Development                                                                                                                                                                                                     | Production                                                                                                                                                                                                   |
+|:-------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Frontend** | [![Dev Status](https://img.shields.io/github/deployments/baris1892/datascientest-final-project/frontend-dev?label=status&style=flat-square)](https://dev.baris.cloud-ip.cc "Open Development Frontend")         | [![Prod Status](https://img.shields.io/github/deployments/baris1892/datascientest-final-project/frontend-prod?label=status&style=flat-square)](https://baris.cloud-ip.cc "Open Production Frontend")         |
+| **Backend**  | [![Dev Status](https://img.shields.io/github/deployments/baris1892/datascientest-final-project/backend-dev?label=status&style=flat-square)](https://dev-api.baris.cloud-ip.cc/petclinic "Open Development API") | [![Prod Status](https://img.shields.io/github/deployments/baris1892/datascientest-final-project/backend-prod?label=status&style=flat-square)](https://api.baris.cloud-ip.cc/petclinic "Open Production API") |
 
 ## Project Overview
 
