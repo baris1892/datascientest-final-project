@@ -8,26 +8,6 @@ resource "kubernetes_namespace" "this" {
   }
 }
 
-resource "helm_release" "frontend" {
-  name      = "frontend"
-  chart     = "../../charts/frontend"
-  namespace = var.namespace
-  values = [
-    file("../../charts/frontend/values.yaml"),
-    file("../../charts/frontend/values-prod.yaml")
-  ]
-}
-
-resource "helm_release" "backend" {
-  name      = "backend"
-  chart     = "../../charts/backend"
-  namespace = var.namespace
-  values = [
-    file("../../charts/backend/values.yaml"),
-    file("../../charts/backend/values-prod.yaml")
-  ]
-}
-
 data "sops_file" "database_secrets" {
   source_file = "../../charts/database/values-secrets-prod.yaml"
 }
