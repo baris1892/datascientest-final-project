@@ -72,71 +72,21 @@ layers:
 
 ## 3. Tech Stack
 
-## _!!!WIP!!!_
-
-**Containerization & Orchestration**
-
-- Each application component (frontend, backend, database) is containerized using Docker
-- Custom Dockerfiles are used for:
-    - Frontend: Angular application
-    - Backend: Spring Boot application
-- Kubernetes is used as the orchestration platform (k3s)
-- Helm charts are created and maintained for:
-    - frontend
-    - backend
-    - database
-- Helm enables reusable, parameterized and environment-specific deployments (dev / prod)
-
-**Choice of infrastructure components (Front, Back, DB)**
-
-- Frontend
-    - Angular application
-    - Deployed as a Kubernetes Deployment
-    - Exposed via Kubernetes Ingress
-- Backend
-    - Spring Boot (Petclinic) REST API
-    - Deployed as a Kubernetes Deployment
-    - Communicates internally with the database via ClusterIP service
-- Database
-    - PostgreSQL
-    - Deployed as a Kubernetes Stateful component
-    - Database credentials are encrypted using SOPS with an age key
-    - Encrypted secrets are decrypted at deploy time and stored as Kubernetes Secrets
-- The architecture follows a clear separation of concerns between presentation, business logic, and persistence layers
-
-**Choose the right technical data storage solution**
-
-Chosen solution
-
-- Relational database: PostgreSQL
-- Deployment type: Kubernetes StatefulSet
-- Persistence: PersistentVolumeClaim (PVC)
-
-Rationale
-
-- PostgreSQL is well suited for structured, transactional application data
-- StatefulSet guarantees:
-    - Stable network identity
-    - Stable volume attachment per replica
-
-Storage backend
-
-- Kubernetes distribution: k3s
-- Default StorageClass: local-path
-- Provisioner: rancher.io/local-path
-- Storage type: node-local filesystem
-
-Trade-offs
-
-- ✅ Survives pod restarts and cluster restarts
-- ❌ No high availability in case of node failure
-- ❌ Node-bound storage (acceptable for this project)
-
----
-
-- Infrastructure as Code (IaC): Terraform is used to manage the Kubernetes cluster state, including namespaces and the
-  initial Helm releases.
-- Configuration Management: Helm provides parameterized, reusable templates for the entire stack (FE, BE, DB).
+| Category             | Technology       | Usage & Purpose                                                   |
+|----------------------|------------------|-------------------------------------------------------------------|
+| **Frontend**	        | Angular          | Single Page Application (SPA) for the user interface.             |
+| **Backend**          | Spring Boot      | RESTful API handling business logic and database interactions.    |
+| **Database**         | PostgreSQL       | Relational database for persistent storage of application data.   |
+| **Containerization** | Docker           | Creating docker images using multi-stage builds.                  |
+| **Orchestration**    | k3s (Kubernetes) | Lightweight Kubernetes distribution running on Proxmox VM.        |
+| **Infrastructure**   | Terraform        | Infrastructure as Code (IaC) for provisioning K8s resources.      |
+| **CI/CD Pipeline**   | GitHub Actions   | Automated build, test and containerization workflow.              |
+| **GitOps**           | ArgoCD           | Declarative continuous delivery and cluster synchronization.      |
+| **Security**         | Trivy            | Vulnerability scanning for Docker images within the pipeline.     |
+| **Secret Mgmt.**     | SOPS & age       | Encryption of sensitive data (Secrets) within the Git repository. |
+| **Certificates**     | cert-manager     | Automated HTTPS/TLS via Let's Encrypt.                            |
+| **Observability**    | Prometheus       | Metric collection and monitoring of cluster and app health.       |
+| **Visualization**    | Grafana          | Centralized dashboards for infrastructure and app metrics.        |
 
 ---
 
@@ -181,6 +131,13 @@ Outcome
 
 - Declarative Setup: All infrastructure and application states are defined declaratively in YAML/HCL. This allows for
   fully automated, repeatable deployments and ensures that both environments stay in sync.
+
+
+- From slack requirements:
+    - Use different environment variables for each environment.
+    - Use separate configuration files or values for dev vs prod.
+    - Deploy dev automatically and production after approval (if using CI/CD).
+    - Document the differences in configuration.
 
 ---
 
