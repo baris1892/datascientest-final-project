@@ -62,7 +62,98 @@ Include:
 
 ---
 
+**Network management & connection ports**
+
+- Internal communication uses Kubernetes ClusterIP services
+- External access is handled via Kubernetes Ingress (Traefik)
+- No direct NodePort exposure for application services
+- Environment-based domain routing:
+    - DEV
+        - Frontend: https://dev.baris.cloud-ip.cc
+        - Backend API: https://dev-api.baris.cloud-ip.cc
+    - PROD
+        - Frontend: https://baris.cloud-ip.cc
+        - Backend API: https://api.baris.cloud-ip.cc
+    - OTHER
+        - ArgoCD: https://argocd.baris.cloud-ip.cc
+- This setup ensures controlled access and clean separation between environments
+
+**Data ingestion**
+Ingestion flow
+
+- Application services write data to PostgreSQL
+- Data ingestion happens via REST APIs exposed by spring backend service
+- PostgreSQL acts as the system of record
+
+---
+
 ## 3. Tech Stack
+
+## _!!!WIP!!!_
+
+**Containerization & Orchestration**
+
+- Each application component (frontend, backend, database) is containerized using Docker
+- Custom Dockerfiles are used for:
+    - Frontend: Angular application
+    - Backend: Spring Boot application
+- Kubernetes is used as the orchestration platform (k3s)
+- Helm charts are created and maintained for:
+    - frontend
+    - backend
+    - database
+- Helm enables reusable, parameterized and environment-specific deployments (dev / prod)
+
+**Choice of infrastructure components (Front, Back, DB)**
+
+- Frontend
+    - Angular application
+    - Deployed as a Kubernetes Deployment
+    - Exposed via Kubernetes Ingress
+- Backend
+    - Spring Boot (Petclinic) REST API
+    - Deployed as a Kubernetes Deployment
+    - Communicates internally with the database via ClusterIP service
+- Database
+    - PostgreSQL
+    - Deployed as a Kubernetes Stateful component
+    - Database credentials are encrypted using SOPS with an age key
+    - Encrypted secrets are decrypted at deploy time and stored as Kubernetes Secrets
+- The architecture follows a clear separation of concerns between presentation, business logic, and persistence layers
+
+**Choose the right technical data storage solution**
+
+Chosen solution
+
+- Relational database: PostgreSQL
+- Deployment type: Kubernetes StatefulSet
+- Persistence: PersistentVolumeClaim (PVC)
+
+Rationale
+
+- PostgreSQL is well suited for structured, transactional application data
+- StatefulSet guarantees:
+    - Stable network identity
+    - Stable volume attachment per replica
+
+Storage backend
+
+- Kubernetes distribution: k3s
+- Default StorageClass: local-path
+- Provisioner: rancher.io/local-path
+- Storage type: node-local filesystem
+
+Trade-offs
+
+- ✅ Survives pod restarts and cluster restarts
+- ❌ No high availability in case of node failure
+- ❌ Node-bound storage (acceptable for this project)
+
+---
+
+- Infrastructure as Code (IaC): Terraform is used to manage the Kubernetes cluster state, including namespaces and the
+  initial Helm releases.
+- Configuration Management: Helm provides parameterized, reusable templates for the entire stack (FE, BE, DB).
 
 ---
 
@@ -72,9 +163,41 @@ Include:
 
 ## 5. How to deploy dev & prod
 
+**Frontend environment configuration**
+
+- To inject environment-specific variables into the Angular frontend, a dynamic `assets/env.js` file is used
+- This file is referenced in `petclinic-angular/src/environments/environment.prod.ts`
+- In Kubernetes, the `assets/env.js` is overridden via a ConfigMap per environment
+- Example: `REST_API_URL` is dynamically injected for dev / prod environments
+- This approach avoids hardcoding environment variables in the application and enables reusable deployments
+
 ---
 
+**Persistence & restart validation**
+Validation steps
+
+- Delete PostgreSQL pod manually
+- Restart k3s / cluster node
+- Verify that:
+    - Same PVC is reattached
+    - Database data is preserved
+
+Outcome
+
+- PVC remains bound
+- PostgreSQL restarts with existing data intact
+
+---
+
+- Multi-Environment Strategy: We use a "Build Once, Deploy Anywhere" approach. The same Helm charts and Terraform
+  modules are used for dev and prod.
+- Environment Injection: Environment-specific configurations are managed via values-dev.yaml and values-prod.yaml,
+  ensuring minimal duplication.
+
 ## 6. CI/CD
+
+- Declarative Setup: All infrastructure and application states are defined declaratively in YAML/HCL. This allows for
+  fully automated, repeatable deployments and ensures that both environments stay in sync.
 
 ---
 
@@ -83,6 +206,51 @@ Include:
 ---
 
 ## 8. Security
+
+# !!!WIP!!!
+
+**Security with encrypted protocols**
+
+- Custom Ingress Controller: Deactivated k3s default Traefik to gain full control via a custom Helm-based Traefik
+  installation; command used during installation:
+
+```
+curl -sfL https://get.k3s.io | sh -s - \
+  --disable traefik \
+  --write-kubeconfig-mode 644
+```
+
+- Automated Certificate Management: Integrated cert-manager to handle the full lifecycle of TLS certificates
+- Let's Encrypt Integration: Implemented ACME (HTTP-01) challenges using a ClusterIssuer for automated domain validation
+- Environment Strategy:
+    - Currently using Let's Encrypt Staging environment for all environment (dev/prod) to avoid API rate limits
+    - Configuration is "Production-ready": Switching to the Production Issuer only requires a single annotation change.
+- Protocol Security: Automated HTTP-to-HTTPS redirection is enforced at the Ingress level
+
+**Secrets management**
+
+- Database credentials are stored as Kubernetes Secrets
+- Secrets are encrypted using SOPS
+- Encryption is performed before committing manifests to version control
+- Environment variables injected into the database container:
+    - POSTGRES_USER
+    - POSTGRES_PASSWORD
+    - POSTGRES_DB
+
+Implementation details
+
+- SOPS with age key encryption
+- Encrypted secrets are stored safely in Git
+- Decryption happens only during deployment
+
+Benefits
+
+- Prevents plaintext credentials in the repository
+
+Access isolation
+
+- Database is only accessible inside the Kubernetes cluster
+- No public exposure of PostgreSQL service
 
 ---
 
@@ -123,26 +291,32 @@ Include:
     - **Scalability Note**: In a multi-node production environment, Kubernetes would automatically reschedule pods to
       healthy nodes (self-healing).
 
-### 9.3 Infrastructure Redeployment (IaC)
+### 9.3 Infrastructure Deployment (IaC)
 
-The redeployment is split into two logical layers to manage dependencies effectively:
+The deployment is organized into three layers to strictly separate the global platform from environment-specific
+resources:
 
-1. **Base Layer (Manual)**: Provisioning of the VM and installation of k3s (without Traefik), SOPS/Age for secrets and
-   Terraform.
-2. **Cluster Infrastructure (IaC - `infra/`)**:
-   Running `terraform apply` in the `infra` folder deploys shared cluster services:
-    - **Traefik** (Ingress Controller)
-    - **Cert-Manager** (SSL Management)
-    - **ArgoCD** (GitOps Controller)
+**1. Base Layer (Manual)**: Provisioning of the VM and installation of k3s, SOPS/Age for secret decryption, and the
+Terraform CLI.
 
-3. **Application Environments (IaC - `environments/`)**:
-   Running `terraform apply` in `environments/dev` or `environments/prod` configures the specific environment settings
-   and triggers the ArgoCD "App-of-Apps" pattern.
-4. **GitOps Synchronization**: ArgoCD monitors the Git repository and ensures that the Helm charts (from the `charts/`
-   folder) are deployed and kept in sync with the cluster state.
+**2. Global Cluster Services & GitOps Control (infra/)**: Running terraform apply in this folder sets up the cluster's "
+Control Plane". This layer is environment-agnostic and manages the global state:
 
-**Disaster Recovery Scenario**: To restore the system from scratch, an engineer simply needs to restore the `age.key`,
-run Terraform in `infra` and then in the respective `environment` folder. ArgoCD will handle the rest.
+- Traefik & Cert-Manager: Handling ingress and SSL for the entire cluster.
+- ArgoCD: Installation of the GitOps Controller.
+- ArgoCD Application Resources: Definition of the "App-of-Apps" pattern. Here, the links between the Git repository and
+  the various environments (dev, prod) are established.
+
+**3. Application Environments (environments/)**: Running terraform apply in environments/dev or environments/prod
+provisions only the dedicated resources for that specific stage:
+
+- Namespace: Logical isolation for the environment.
+- Stateful Infrastructure: Provisioning of the Database (PostgreSQL) and the injection of environment-specific secrets (
+  e.g., DB credentials) via SOPS.
+
+**4. GitOps Synchronization**: Once the infrastructure is ready, ArgoCD (provisioned in the global layer) detects the
+new namespace and its requirements. It automatically synchronizes the stateless applications (Frontend, Backend) and
+CronJobs from the charts/ folder into the target namespace.
 
 ### 9.4 How to roll back to a previous version
 
