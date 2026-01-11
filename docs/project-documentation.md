@@ -53,37 +53,20 @@ Board** to ensure transparency and structured progress through the various DevOp
 
 ## 2. Architecture Diagram
 
-Include:
+![Architecture Diagram](./assets/architecture.svg)
 
-- Application components
-- CI/CD pipeline
-- Infrastructure
-- K8s architecture
+This diagram illustrates the end-to-end cloud-native lifecycle of the application. It is divided into three main logical
+layers:
 
----
-
-**Network management & connection ports**
-
-- Internal communication uses Kubernetes ClusterIP services
-- External access is handled via Kubernetes Ingress (Traefik)
-- No direct NodePort exposure for application services
-- Environment-based domain routing:
-    - DEV
-        - Frontend: https://dev.baris.cloud-ip.cc
-        - Backend API: https://dev-api.baris.cloud-ip.cc
-    - PROD
-        - Frontend: https://baris.cloud-ip.cc
-        - Backend API: https://api.baris.cloud-ip.cc
-    - OTHER
-        - ArgoCD: https://argocd.baris.cloud-ip.cc
-- This setup ensures controlled access and clean separation between environments
-
-**Data ingestion**
-Ingestion flow
-
-- Application services write data to PostgreSQL
-- Data ingestion happens via REST APIs exposed by spring backend service
-- PostgreSQL acts as the system of record
+- **CI/CD & GitOps Layer**: Handles the automated DevSecOps pipeline from code push to deployment using GitHub Actions
+  and
+  ArgoCD.
+- **Infrastructure Layer**: The foundation based on k3s and Proxmox, including networking (Traefik) and automated SSL
+  management.
+- **K8s Architecture (Workloads)**: The logical organization of application components using Deployments, StatefulSets
+  and
+  Namespaces for environment isolation.
+- **Observability**: Centralized monitoring of cluster health and application metrics.
 
 ---
 
