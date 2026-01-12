@@ -1,0 +1,36 @@
+name: Docker Scan
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        required: true
+        type: string
+      context:
+        required: false
+        type: string
+        default: "."
+
+jobs:
+  trivy-scan:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # We build it locally just for the scanner
+      - name: Build image for scanning
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ inputs.context }}
+          push: false
+          load: true
+          tags: ${{ inputs.image_name }}:scan-tmp
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ inputs.image_name }}:scan-tmp'
+          format: 'table'
+          exit-code: 1 # This will make the job fail (RED)
+          severity: 'CRITICAL,HIGH'

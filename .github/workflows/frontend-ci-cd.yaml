@@ -60,11 +60,19 @@ jobs:
         with:
           args: --severity-threshold=high petclinic-angular
 
+  security-scan:
+    name: Trivy Container Scan
+    needs: test
+    uses: ./.github/workflows/_docker-scan.yml
+    with:
+      image_name: baris1892/datascientest-final-project-petclinic-angular
+      context: ./petclinic-angular
+
   # BUILD JOB
   # Uses the reusable workflow to build and push the Docker image
   build:
     name: Build and Push Docker Image
-    needs: [ test, security-code ]
+    needs: [ test, security-code, security-scan ]
     uses: ./.github/workflows/_docker-build.yml
     with:
       image_name: baris1892/datascientest-final-project-petclinic-angular
@@ -73,80 +81,80 @@ jobs:
       context: ./petclinic-angular
     secrets: inherit
 
-  # DEPLOY TO DEV
-  # Automatically updates the dev manifest on every push to develop branch
-  deploy-dev:
-    name: Update Frontend Dev Manifest
-    needs: [ build ]
-    if: github.ref == 'refs/heads/develop'
-    runs-on: ubuntu-latest
-    environment:
-      name: frontend-dev
-      url: https://dev.baris.cloud-ip.cc
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.MY_GITHUB_TOKEN }} # Needed to bypass branch protection
-
-      - name: Update values-dev.yaml
-        run: |
-          git pull origin develop
-          yq -i '.image.tag = "${{ github.sha }}"' infrastructure/charts/frontend/values-dev.yaml
-
-      - name: Commit and Push to Develop
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add infrastructure/charts/frontend/values-dev.yaml
-          git commit -m "chore(dev): update frontend image tag to ${{ github.sha }} [skip ci]" || exit 0
-          git pull --rebase origin develop
-          git push origin develop
-
-  release-info:
-    name: Prepare Release Metadata
-    needs: [ build ]
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Generate Summary
-        run: |
-          echo "### 🚀 Production Release Pending" >> $GITHUB_STEP_SUMMARY
-          echo "A new release is waiting for your approval." >> $GITHUB_STEP_SUMMARY
-          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Version** | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Actor** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Commit** | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
-
-  # DEPLOY TO PROD (with approval flow)
-  # Only triggers when a git tag 'v*' is pushed
-  deploy-prod:
-    name: Update Frontend Prod Manifest (Approval Required)
-    needs: [ build, release-info ]
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    environment: # This environment triggers the manual approval in GitHub UI
-      name: frontend-prod
-      url: https://baris.cloud-ip.cc
-    steps:
-      - name: Checkout Master Branch
-        uses: actions/checkout@v4
-        with:
-          ref: master # We must update the master branch for GitOps
-          token: ${{ secrets.MY_GITHUB_TOKEN }}
-
-      - name: Update values-prod.yaml
-        run: |
-          git pull origin master
-          # Use the tag name (e.g. v1.0.0) from the trigger
-          yq -i '.image.tag = "${{ github.ref_name }}"' infrastructure/charts/frontend/values-prod.yaml
-
-      - name: Commit and Push to Master
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add infrastructure/charts/frontend/values-prod.yaml
-          git commit -m "chore(prod): release frontend ${{ github.ref_name }} [skip ci]" || exit 0
-          git pull --rebase origin master
-          git push origin master
+#  # DEPLOY TO DEV
+#  # Automatically updates the dev manifest on every push to develop branch
+#  deploy-dev:
+#    name: Update Frontend Dev Manifest
+#    needs: [ build ]
+#    if: github.ref == 'refs/heads/develop'
+#    runs-on: ubuntu-latest
+#    environment:
+#      name: frontend-dev
+#      url: https://dev.baris.cloud-ip.cc
+#    steps:
+#      - name: Checkout Repository
+#        uses: actions/checkout@v4
+#        with:
+#          token: ${{ secrets.MY_GITHUB_TOKEN }} # Needed to bypass branch protection
+#
+#      - name: Update values-dev.yaml
+#        run: |
+#          git pull origin develop
+#          yq -i '.image.tag = "${{ github.sha }}"' infrastructure/charts/frontend/values-dev.yaml
+#
+#      - name: Commit and Push to Develop
+#        run: |
+#          git config user.name "github-actions[bot]"
+#          git config user.email "github-actions[bot]@users.noreply.github.com"
+#          git add infrastructure/charts/frontend/values-dev.yaml
+#          git commit -m "chore(dev): update frontend image tag to ${{ github.sha }} [skip ci]" || exit 0
+#          git pull --rebase origin develop
+#          git push origin develop
+#
+#  release-info:
+#    name: Prepare Release Metadata
+#    needs: [ build ]
+#    if: startsWith(github.ref, 'refs/tags/v')
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Generate Summary
+#        run: |
+#          echo "### 🚀 Production Release Pending" >> $GITHUB_STEP_SUMMARY
+#          echo "A new release is waiting for your approval." >> $GITHUB_STEP_SUMMARY
+#          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+#          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+#          echo "| **Version** | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
+#          echo "| **Actor** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+#          echo "| **Commit** | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+#
+#  # DEPLOY TO PROD (with approval flow)
+#  # Only triggers when a git tag 'v*' is pushed
+#  deploy-prod:
+#    name: Update Frontend Prod Manifest (Approval Required)
+#    needs: [ build, release-info ]
+#    if: startsWith(github.ref, 'refs/tags/v')
+#    runs-on: ubuntu-latest
+#    environment: # This environment triggers the manual approval in GitHub UI
+#      name: frontend-prod
+#      url: https://baris.cloud-ip.cc
+#    steps:
+#      - name: Checkout Master Branch
+#        uses: actions/checkout@v4
+#        with:
+#          ref: master # We must update the master branch for GitOps
+#          token: ${{ secrets.MY_GITHUB_TOKEN }}
+#
+#      - name: Update values-prod.yaml
+#        run: |
+#          git pull origin master
+#          # Use the tag name (e.g. v1.0.0) from the trigger
+#          yq -i '.image.tag = "${{ github.ref_name }}"' infrastructure/charts/frontend/values-prod.yaml
+#
+#      - name: Commit and Push to Master
+#        run: |
+#          git config user.name "github-actions[bot]"
+#          git config user.email "github-actions[bot]@users.noreply.github.com"
+#          git add infrastructure/charts/frontend/values-prod.yaml
+#          git commit -m "chore(prod): release frontend ${{ github.ref_name }} [skip ci]" || exit 0
+#          git pull --rebase origin master
+#          git push origin master

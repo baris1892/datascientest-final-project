@@ -1,4 +1,4 @@
-name: Docker Build, Scan and Push
+name: Docker Build
 on:
   workflow_call:
     inputs:
@@ -20,41 +20,13 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      # STEP 1: Build the image locally
-      # We use 'load: true' to make the image available for Trivy on the runner.
-      - name: Build Docker Image locally
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{ inputs.context }}
-          push: false
-          load: true
-          tags: ${{ inputs.image_name }}:scan-tmp
-
-      # STEP 2: Security Scan with Trivy
-      # We set exit-code: 1 so Trivy reports an error if vulnerabilities are found.
-      # We use continue-on-error: true so the Job doesn't stop, but shows a WARNING.
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        continue-on-error: true
-        with:
-          image-ref: '${{ inputs.image_name }}:scan-tmp'
-          format: 'table'
-          exit-code: 1
-          severity: 'CRITICAL,HIGH'
-
-      # STEP 3: Authentication
+      - uses: actions/checkout@v4
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-      # STEP 4: Final Push
-      # This step will run even if Trivy found issues, thanks to continue-on-error.
-      - name: Build and push verified image
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.context }}
