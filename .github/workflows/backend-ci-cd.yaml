@@ -15,7 +15,6 @@ on:
       - 'v*'
 
 env:
-  IMAGE_NAME: 'baris1892/datascientest-final-project-petclinic-rest'
   WORKING_DIR: './petclinic-rest'
   JAVA_VERSION: '21'
   JAVA_DISTRO: 'temurin'
@@ -27,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ${{ env.WORKING_DIR }}
+        working-directory: $WORKING_DIR
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -70,8 +69,8 @@ jobs:
     needs: test
     uses: ./.github/workflows/_docker-scan.yml
     with:
-      image_name: ${{ env.IMAGE_NAME }}
-      context: ${{ env.WORKING_DIR }}
+      image_name: 'baris1892/datascientest-final-project-petclinic-rest'
+      context: './petclinic-rest'
 
   # BUILD JOB
   build:
@@ -79,9 +78,9 @@ jobs:
     needs: [ test, security-code, security-scan ]
     uses: ./.github/workflows/_docker-build.yml
     with:
-      image_name: ${{ env.IMAGE_NAME }}
+      image_name: 'baris1892/datascientest-final-project-petclinic-rest'
+      context: './petclinic-rest'
       tag: ${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
-      context: ${{ env.WORKING_DIR }}
     secrets: inherit
 
   # DEPLOY TO DEV
