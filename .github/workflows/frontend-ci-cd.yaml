@@ -49,9 +49,6 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     continue-on-error: true
-    defaults:
-      run:
-        working-directory: ./petclinic-angular
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -61,7 +58,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=high
+          args: --severity-threshold=high petclinic-angular
 
   # BUILD JOB
   # Uses the reusable workflow to build and push the Docker image
