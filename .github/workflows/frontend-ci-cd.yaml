@@ -91,6 +91,7 @@ jobs:
 
       - name: Update values-dev.yaml
         run: |
+          git pull origin develop
           yq -i '.image.tag = "${{ github.sha }}"' infrastructure/charts/frontend/values-dev.yaml
 
       - name: Commit and Push to Develop
@@ -137,6 +138,7 @@ jobs:
 
       - name: Update values-prod.yaml
         run: |
+          git pull origin master
           # Use the tag name (e.g. v1.0.0) from the trigger
           yq -i '.image.tag = "${{ github.ref_name }}"' infrastructure/charts/frontend/values-prod.yaml
 
