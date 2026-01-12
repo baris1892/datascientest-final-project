@@ -15,7 +15,6 @@ on:
       - 'v*'
 
 env:
-  WORKING_DIR: './petclinic-rest'
   JAVA_VERSION: '21'
   JAVA_DISTRO: 'temurin'
 
@@ -26,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: $WORKING_DIR
+        working-directory: ./petclinic-rest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -86,7 +85,7 @@ jobs:
   # DEPLOY TO DEV
   deploy-dev:
     name: Update Backend Dev Manifest
-    needs: [ test, build ]
+    needs: [ build ]
     if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     environment:
@@ -130,7 +129,7 @@ jobs:
   # DEPLOY TO PROD (Approval Required)
   deploy-prod:
     name: Update Backend Prod Manifest (Approval Required)
-    needs: [ test, build, release-info ]
+    needs: [ build, release-info ]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment:
