@@ -93,7 +93,6 @@ chmod +x /usr/local/bin/sops
 cd infra
 terraform init
 terraform apply
-kubectl apply -f issuers-staging.yaml
 ```
 
 ---

@@ -231,7 +231,29 @@ Access isolation
     - **Scalability Note**: In a multi-node production environment, Kubernetes would automatically reschedule pods to
       healthy nodes (self-healing).
 
-### 9.3 Infrastructure Deployment (IaC)
+### 9.3 Infrastructure Deployment (IaC) (STATUS: TODO)
+
+#### TODO: Write down commands:
+
+```
+# Setup global "infra" config like Traefik, Cert-Manager, ArgoCD
+cd infra
+terraform init
+terraform apply
+
+# configure SOPS key
+mkdir -p ~/.config/sops/age
+cp /home/ubuntu/infrastructure/age.key.dist ~/.config/sops/age/keys.txt
+chmod 600 ~/.config/sops/age/keys.txt
+
+# setup DB for namespace dev & prod
+cd infrastructure/environments/dev;  terraform init; terraform apply
+cd infrastructure/environments/prod; terraform init; terraform apply
+
+# Execute ArgoCD `app-of-apps.yaml`
+cd infrastructure
+kubectl apply -f argocd/app-of-apps.yaml
+```
 
 The deployment is organized into three layers to strictly separate the global platform from environment-specific
 resources:
