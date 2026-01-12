@@ -14,14 +14,20 @@ on:
     tags:
       - 'v*'
 
+env:
+  IMAGE_NAME: 'baris1892/datascientest-final-project-petclinic-rest'
+  WORKING_DIR: './petclinic-rest'
+  JAVA_VERSION: '21'
+  JAVA_DISTRO: 'temurin'
+
 jobs:
-  # 1. TEST JOB (Java/Maven)
+  # TEST JOB (Java/Maven)
   test:
     name: Run Backend Tests
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./petclinic-rest
+        working-directory: ${{ env.WORKING_DIR }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -29,25 +35,56 @@ jobs:
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRO }}
           cache: 'maven'
 
       - name: Run Tests with Maven
         run: ./mvnw test
 
-  # 2. BUILD JOB
+  security-code:
+    name: Snyk Dependency Scan (Backend)
+    needs: test
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRO }}
+          cache: 'maven'
+
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/maven-3-jdk-21@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high petclinic-rest
+
+  security-scan:
+    name: Trivy Container Scan
+    needs: test
+    uses: ./.github/workflows/_docker-scan.yml
+    with:
+      image_name: ${{ env.IMAGE_NAME }}
+      context: ${{ env.WORKING_DIR }}
+
+  # BUILD JOB
   build:
     name: Build and Push Backend Image
-    needs: test
+    needs: [ test, security-code, security-scan ]
     uses: ./.github/workflows/_docker-build.yml
     with:
-      image_name: baris1892/datascientest-final-project-petclinic-rest
+      image_name: ${{ env.IMAGE_NAME }}
       tag: ${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
-      context: ./petclinic-rest
+      context: ${{ env.WORKING_DIR }}
     secrets: inherit
 
-  # 3. DEPLOY TO DEV
+  # DEPLOY TO DEV
   deploy-dev:
     name: Update Backend Dev Manifest
     needs: [ test, build ]
@@ -91,7 +128,7 @@ jobs:
           echo "| **Actor** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Commit** | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
 
-  # 4. DEPLOY TO PROD (Approval Required)
+  # DEPLOY TO PROD (Approval Required)
   deploy-prod:
     name: Update Backend Prod Manifest (Approval Required)
     needs: [ test, build, release-info ]
