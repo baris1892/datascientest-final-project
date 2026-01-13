@@ -63,5 +63,5 @@ spec:
           volumes:
             - name: backup-storage
               hostPath:
-                path: /home/backups/database # Location on Proxmox VM
+                path: /home/backups/database/{{ .Release.Namespace }} # Location on Proxmox VM
                 type: DirectoryOrCreate
