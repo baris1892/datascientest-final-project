@@ -1,0 +1,60 @@
+# Grafana configuration for visualization
+grafana:
+  service:
+    type: ClusterIP # Internal cluster access only, exposed via Ingress
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - monitoring.baris.cloud-ip.cc
+    path: /
+    pathType: Prefix
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-staging # Auto-TLS via Cert-Manager
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - monitoring.baris.cloud-ip.cc
+
+# Prometheus configuration for data collection and storage
+prometheus:
+  prometheusSpec:
+    # Essential: Discover ServiceMonitors across all namespaces (dev, prod, argocd, etc.)
+    serviceMonitorSelectorNilUsesHelmValues: false
+    retention: 10d # Keep data for 10 days
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - prometheus.baris.cloud-ip.cc
+    path: /
+
+# Alertmanager configuration for notification routing
+alertmanager:
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - alerts.baris.cloud-ip.cc
+    path: /
+
+# Prometheus Operator core settings
+prometheusOperator:
+  manageCrds: true # Ensures CRDs (like ServiceMonitors) are installed/updated
+
+# Global Alerting Rules managed by the Prometheus Operator
+additionalPrometheusRulesMap:
+  postgres-rules:
+    groups:
+      - name: postgres_alerts
+        rules:
+          # Alert triggers if any postgres-exporter in any namespace reports pg_up == 0
+          - alert: PostgresDown
+            expr: pg_up == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              # Using Go-Templating to dynamically show the affected namespace
+              summary: "PostgresDown ({{ $labels.namespace }})"
+              description: "The Postgres exporter in {{ $labels.namespace }} reports that the database is unreachable."

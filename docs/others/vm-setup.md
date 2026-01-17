@@ -92,6 +92,7 @@ chmod +x /usr/local/bin/sops
 ```
 cd infra
 terraform init
+terraform apply -target=helm_release.cert_manager
 terraform apply
 ```
 
@@ -118,4 +119,10 @@ kubectl -n dev get deploy frontend -o=jsonpath='{.spec.template.spec.containers[
 
 # get argocd UI password (username is always 'admin')
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d 
+```
+
+#### kube-prometheus-stack
+```
+# get grafana pw for user 'admin'
+kubectl get secret -n monitoring prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 ```

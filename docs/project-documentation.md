@@ -143,6 +143,43 @@ Outcome
 
 ## 7. Monitoring
 
+To ensure high availability and observability, the project implements a comprehensive monitoring stack based on
+**Prometheus** and **Grafana** ([Dashboard](https://monitoring.baris.cloud-ip.cc/)), deployed via the **Prometheus
+Operator** Helm Chart (`kube-prometheus-stack`).
+
+### Key Components
+
+- **Infrastructure Monitoring**: Automated collection of CPU, Memory, and Network metrics via `node-exporter`.
+- **Database Monitoring**: Integration of `prometheus-postgres-exporter` to track PostgreSQL health and performance.
+- **Alerting Pipeline**: Custom `PrometheusRules` to trigger alerts for critical failures (e.g., database downtime).
+
+Note: Grafana password for `admin` can be retrieved via:  
+```kubectl get secret -n monitoring prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo```
+
+### Demonstration: Fault Tolerance & Alerting
+
+To verify the alerting pipeline, a database failure was simulated in the dev namespace by scaling the PostgreSQL
+StatefulSet to zero replicas.
+
+**Scenario Workflow:**
+
+1. Failure Injection: `kubectl -n dev scale statefulset database-db --replicas=0`
+2. Detection: The Postgres Exporter reports `pg_up 0`, while
+   the [exporter's scrape target](https://prometheus.baris.cloud-ip.cc/targets?search=postgres) remains "UP" (indicating
+   the monitoring side is still functional).
+3. Alert Trigger: After a 1-minute grace period (`for: 1m`), Prometheus transitions the `PostgresDown` alert to the
+   FIRING state.
+4. Visualization: The alert is dynamically labeled with the affected namespace (`dev`) and displayed in the [Grafana
+   Alerting UI](https://monitoring.baris.cloud-ip.cc/alerting/Prometheus/pri%24Prometheus%24%1Fetc%1Fprometheus%1Frules%1Fprometheus-prometheus-kube-prometheus-prometheus-rulefiles-0%1Fmonitoring-prometheus-kube-prometheus-postgres-rules-d680d523-8aab-4e4d-9b60-5abc8bb91e0a.yaml%24postgres_alerts%24PostgresDown%24353288546/view?tab=instances).
+
+**Evidence:**
+
+- **Screenshot 1**: Shows the **Grafana Alert Rules** overview where the rule is evaluated.  
+  <img src="./assets/grafana-alert-rules-postgres-down.png" style="width: 50%;" alt="Grafana Alert Rules">
+- **Screenshot 2**: Displays the **Firing Alert Instance** with the specific label `namespace="dev"`, proving the
+  dynamic templating works as intended.   
+  <img src="./assets/grafana-postgres-down.png" style="width: 50%;" alt="Grafana Postgres Down">
+
 ---
 
 ## 8. Security
@@ -236,9 +273,10 @@ Access isolation
 #### TODO: Write down commands:
 
 ```
-# Setup global "infra" config like Traefik, Cert-Manager, ArgoCD
+# Setup global "infra" config like Traefik, Cert-Manager, ArgoCD, Monitoring
 cd infra
 terraform init
+terraform apply -target=helm_release.cert_manager
 terraform apply
 
 # configure SOPS key
