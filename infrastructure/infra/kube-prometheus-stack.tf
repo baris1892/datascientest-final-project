@@ -16,3 +16,18 @@ resource "helm_release" "prometheus_stack" {
     file("${path.module}/kube-prometheus-stack-values.yaml")
   ]
 }
+
+resource "kubernetes_config_map" "traefik_custom_dashboard" {
+  metadata {
+    name      = "traefik-custom-dashboard"
+    namespace  = kubernetes_namespace.monitoring.metadata[0].name
+
+    labels = {
+      grafana_dashboard = "1"
+    }
+  }
+
+  data = {
+    "traefik-dashboard.json" = file("${path.module}/dashboards/traefik_custom_dashboard.json")
+  }
+}

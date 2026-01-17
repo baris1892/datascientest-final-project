@@ -15,6 +15,11 @@ grafana:
       - secretName: grafana-tls
         hosts:
           - monitoring.baris.cloud-ip.cc
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
 
 # Prometheus configuration for data collection and storage
 prometheus:
