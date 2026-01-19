@@ -47,6 +47,15 @@ spec:
             - name: POSTGRES_URL
               value: "jdbc:postgresql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}"
 
+            # Prevents the application from crashing if the database is unavailable during startup.
+            # HikariCP will continue to attempt connecting in the background.
+            - name: SPRING_DATASOURCE_HIKARI_INITIALIZATIONFAILTIMEOUT
+              value: "0"
+
+            # Specifies the maximum time (in milliseconds) the pool will wait for a connection to become available.
+            - name: SPRING_DATASOURCE_HIKARI_CONNECTIONTIMEOUT
+              value: "30000"
+
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:

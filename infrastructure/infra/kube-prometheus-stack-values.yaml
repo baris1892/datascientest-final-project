@@ -65,20 +65,22 @@ alertmanager:
       smtp_require_tls: false
     route:
       group_by: [ 'alertname', 'env' ]
-      #group_wait: 1s       # wait before sending the first notification
-      #group_interval: 5s   # wait between grouped alerts
-      #repeat_interval: 1m  # wait before repeating the same alert
+      group_wait: 10s       # wait before sending the first notification
+      group_interval: 10s   # wait between grouped alerts
+      repeat_interval: 30s  # wait before repeating the same alert
       receiver: 'mailpit-notifications'
       routes:
         - matchers:
             - alertname = "Watchdog"
-          receiver: "null"
+          receiver: 'null'
     receivers:
       - name: 'mailpit-notifications'
         email_configs:
           - to: 'admin@baris.cloud-ip.cc'
             send_resolved: true
             require_tls: false
+      # used to silence some alerts, so nothing happens
+      - name: 'null'
 
 # Prometheus Operator core settings
 prometheusOperator:
@@ -94,7 +96,7 @@ additionalPrometheusRulesMap:
           # 1. Database Health (Internal connectivity)
           - alert: PostgresDown
             expr: pg_up == 0
-            for: 30s
+            for: 10s
             labels:
               severity: critical
               component: database
@@ -105,7 +107,7 @@ additionalPrometheusRulesMap:
           # 2. Backend Health (Spring Boot via Blackbox)
           - alert: SpringBackendDown
             expr: probe_success{app="petclinic-backend"} == 0
-            for: 30s
+            for: 10s
             labels:
               severity: critical
               component: backend
@@ -116,10 +118,17 @@ additionalPrometheusRulesMap:
           # 3. Frontend Health (Angular via Blackbox)
           - alert: AngularFrontendDown
             expr: probe_success{app="petclinic-frontend"} == 0
-            for: 30s
+            for: 10s
             labels:
               severity: critical
               component: frontend
             annotations:
               summary: "Health Alert: Frontend ({{ $labels.env }})"
               description: "Angular Frontend is offline in {{ $labels.env }}. Target: {{ $labels.instance }}"
+
+kubeControllerManager:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeScheduler:
+  enabled: false
