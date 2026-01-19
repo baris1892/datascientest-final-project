@@ -26,6 +26,10 @@ prometheus:
   prometheusSpec:
     # Essential: Discover ServiceMonitors across all namespaces (dev, prod, argocd, etc.)
     serviceMonitorSelectorNilUsesHelmValues: false
+    # allow Prometheus to discover all rules
+    ruleSelectorNilUsesHelmValues: false
+    # allows Prometheus to find "probe" objects
+    probeSelectorNilUsesHelmValues: false
     retention: 10d # Keep data for 10 days
   ingress:
     enabled: true
@@ -34,14 +38,47 @@ prometheus:
       - prometheus.baris.cloud-ip.cc
     path: /
 
-# Alertmanager configuration for notification routing
 alertmanager:
+  enabled: true
   ingress:
     enabled: true
     ingressClassName: traefik
     hosts:
       - alerts.baris.cloud-ip.cc
     path: /
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-staging
+    tls:
+      - secretName: alertmanager-tls
+        hosts:
+          - alerts.baris.cloud-ip.cc
+
+  alertmanagerSpec:
+    useExistingConfig: false
+    alertmanagerConfigSelectorNilUsesHelmValues: false
+    alertmanagerConfigNamespaceSelectorNilUsesHelmValues: false
+
+  config:
+    global:
+      smtp_smarthost: 'mailpit-smtp.monitoring.svc.cluster.local:25'
+      smtp_from: 'alertmanager@baris.cloud-ip.cc'
+      smtp_require_tls: false
+    route:
+      group_by: [ 'alertname', 'env' ]
+      #group_wait: 1s       # wait before sending the first notification
+      #group_interval: 5s   # wait between grouped alerts
+      #repeat_interval: 1m  # wait before repeating the same alert
+      receiver: 'mailpit-notifications'
+      routes:
+        - matchers:
+            - alertname = "Watchdog"
+          receiver: "null"
+    receivers:
+      - name: 'mailpit-notifications'
+        email_configs:
+          - to: 'admin@baris.cloud-ip.cc'
+            send_resolved: true
+            require_tls: false
 
 # Prometheus Operator core settings
 prometheusOperator:
@@ -49,17 +86,40 @@ prometheusOperator:
 
 # Global Alerting Rules managed by the Prometheus Operator
 additionalPrometheusRulesMap:
-  postgres-rules:
+  # One unified rule file for the entire Petclinic Application
+  petclinic-availability-rules:
     groups:
-      - name: postgres_alerts
+      - name: app_health_alerts
         rules:
-          # Alert triggers if any postgres-exporter in any namespace reports pg_up == 0
+          # 1. Database Health (Internal connectivity)
           - alert: PostgresDown
             expr: pg_up == 0
-            for: 1m
+            for: 30s
             labels:
               severity: critical
+              component: database
             annotations:
-              # Using Go-Templating to dynamically show the affected namespace
-              summary: "PostgresDown ({{ $labels.namespace }})"
-              description: "The Postgres exporter in {{ $labels.namespace }} reports that the database is unreachable."
+              summary: "Health Alert: Database ({{ $labels.namespace }})"
+              description: "The Postgres database in namespace {{ $labels.namespace }} is unreachable."
+
+          # 2. Backend Health (Spring Boot via Blackbox)
+          - alert: SpringBackendDown
+            expr: probe_success{app="petclinic-backend"} == 0
+            for: 30s
+            labels:
+              severity: critical
+              component: backend
+            annotations:
+              summary: "Health Alert: Backend ({{ $labels.env }})"
+              description: "Spring Boot is offline in {{ $labels.env }}. Target: {{ $labels.instance }}"
+
+          # 3. Frontend Health (Angular via Blackbox)
+          - alert: AngularFrontendDown
+            expr: probe_success{app="petclinic-frontend"} == 0
+            for: 30s
+            labels:
+              severity: critical
+              component: frontend
+            annotations:
+              summary: "Health Alert: Frontend ({{ $labels.env }})"
+              description: "Angular Frontend is offline in {{ $labels.env }}. Target: {{ $labels.instance }}"

@@ -1,0 +1,14 @@
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  hostname: mailpit.baris.cloud-ip.cc
+  path: /
+  pathType: Prefix
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+
+  tls: true
+  extraTls:
+    - hosts:
+        - mailpit.baris.cloud-ip.cc
+      secretName: mailpit-tls
