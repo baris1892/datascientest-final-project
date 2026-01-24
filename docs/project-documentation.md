@@ -265,7 +265,7 @@ StatefulSet to zero replicas.
 2. Detection: The Postgres Exporter reports `pg_up 0`, while
    the [exporter's scrape target](https://prometheus.baris.cloud-ip.cc/targets?search=postgres) remains "UP" (indicating
    the monitoring side is still functional).
-3. Alert Trigger: After a 1-minute grace period (`for: 1m`), Prometheus transitions the `PostgresDown` alert to the
+3. Alert Trigger: After a grace period, Prometheus transitions the `PostgresDown` alert to the
    FIRING state.
 4. Visualization: The alert is dynamically labeled with the affected namespace (`dev`) and displayed in the [Grafana
    Alerting UI](https://monitoring.baris.cloud-ip.cc/alerting/Prometheus/pri%24Prometheus%24%1Fetc%1Fprometheus%1Frules%1Fprometheus-prometheus-kube-prometheus-prometheus-rulefiles-0%1Fmonitoring-prometheus-kube-prometheus-postgres-rules-d680d523-8aab-4e4d-9b60-5abc8bb91e0a.yaml%24postgres_alerts%24PostgresDown%24353288546/view?tab=instances).
@@ -282,50 +282,37 @@ StatefulSet to zero replicas.
 
 ## 8. Security
 
-# !!!WIP!!!
+The project implements a multi-layered security strategy to protect the application, its data and the deployment
+pipeline.
 
-**Security with encrypted protocols**
+### 8.1 Network Security & Automated TLS
 
-- Custom Ingress Controller: Deactivated k3s default Traefik to gain full control via a custom Helm-based Traefik
-  installation; command used during installation:
+External traffic is secured using production-ready networking standards:
 
-```
-curl -sfL https://get.k3s.io | sh -s - \
-  --disable traefik \
-  --write-kubeconfig-mode 644
-```
+- **Custom Ingress Controller**: The default k3s Traefik was disabled to allow full control via a custom, Helm-managed
+  Traefik installation.
+- **Automated HTTPS**: Cert-manager is integrated to handle the full lifecycle of SSL/TLS certificates.
+- **Let's Encrypt**: Implemented via ACME (HTTP-01) challenges. To avoid API rate limits during development, the Let's
+  Encrypt Staging environment is used.
+- **Enforced Redirection**: Automatic HTTP-to-HTTPS redirection is enforced at the Ingress level.
 
-- Automated Certificate Management: Integrated cert-manager to handle the full lifecycle of TLS certificates
-- Let's Encrypt Integration: Implemented ACME (HTTP-01) challenges using a ClusterIssuer for automated domain validation
-- Environment Strategy:
-    - Currently using Let's Encrypt Staging environment for all environment (dev/prod) to avoid API rate limits
-    - Configuration is "Production-ready": Switching to the Production Issuer only requires a single annotation change.
-- Protocol Security: Automated HTTP-to-HTTPS redirection is enforced at the Ingress level
+### 8.2 Secret Management (SOPS & age)
 
-**Secrets management**
+To strictly avoid hard-coded credentials in the repository, a GitOps-friendly encryption flow is implemented:
 
-- Database credentials are stored as Kubernetes Secrets
-- Secrets are encrypted using SOPS
-- Encryption is performed before committing manifests to version control
-- Environment variables injected into the database container:
-    - POSTGRES_USER
-    - POSTGRES_PASSWORD
-    - POSTGRES_DB
+- **Encryption**: Sensitive values (e.g., PostgreSQL credentials) are encrypted at rest using SOPS and the
+  age encryption tool before being committed to Git.
+- **Injection**: Decryption occurs during deployment, where values are mapped to Kubernetes Secrets and injected into
+  the containers as environment variables.
 
-Implementation details
+### 8.3 Automated Vulnerability Scanning (CI/CD)
 
-- SOPS with age key encryption
-- Encrypted secrets are stored safely in Git
-- Decryption happens only during deployment
+Security is shifted left by integrating automated scans into the GitHub Actions pipeline:
 
-Benefits
-
-- Prevents plaintext credentials in the repository
-
-Access isolation
-
-- Database is only accessible inside the Kubernetes cluster
-- No public exposure of PostgreSQL service
+- **Dependency Scanning (Snyk)**: Scans the application source code (Maven & NPM) for known vulnerabilities in
+  third-party libraries.
+- **Container Scanning (Trivy)**: Every Docker image is scanned for OS-level vulnerabilities. The job is configured
+  to fail if `CRITICAL` or `HIGH` findings are detected.
 
 ---
 
