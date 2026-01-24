@@ -151,9 +151,11 @@ Operator** Helm Chart (`kube-prometheus-stack`).
 
 - **Infrastructure Monitoring**: Automated collection of CPU, Memory, and Network metrics via `node-exporter`.
 - **Database Monitoring**: Integration of `prometheus-postgres-exporter` to track PostgreSQL health and performance.
+- **Monitoring Availability FE/BE**: Deployment of the Prometheus Blackbox Exporter to perform external HTTP/HTTPS
+  health checks on Frontend and Backend endpoints.
 - **Alerting Pipeline**: Custom `PrometheusRules` to trigger alerts for critical failures (e.g., database downtime).
 
-Note: Grafana password for `admin` can be retrieved via:  
+Tip: The Grafana `admin` password can be retrieved via:  
 ```kubectl get secret -n monitoring prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo```
 
 ### Demonstration: Fault Tolerance & Alerting
