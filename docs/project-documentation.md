@@ -21,7 +21,7 @@ the application serves as the foundation for a modern, decoupled microservices a
 
 ### Business & Technical Goals
 
-- **Operational Efficiency:** Providing a stable environment to manage veterinary data (owners, pets, and visits).
+- **Operational Efficiency:** Providing a stable environment to manage veterinary data (owners, pets and visits).
 - **Modernization:** Transitioning from a monolithic-style service to a decoupled frontend-backend architecture.
 - **Scalability & Reliability:** Enabling independent scaling of components and replacing volatile in-memory storage
   with a persistent **PostgreSQL** database to ensure data integrity.
@@ -92,52 +92,148 @@ layers:
 
 ## 4. Setup Steps
 
+The infrastructure is provisioned using **Terraform** for base components and **ArgoCD** for application lifecycle
+management.
+
+### 4.1 Prerequisites
+
+Before deployment, ensure the SOPS encryption key is configured locally to allow Terraform and ArgoCD to handle
+encrypted secrets:
+
+```
+# Configure SOPS age key
+mkdir -p ~/.config/sops/age
+cp /home/ubuntu/infrastructure/age.key.dist ~/.config/sops/age/keys.txt
+chmod 600 ~/.config/sops/age/keys.txt
+```
+
+### 4.2 Global Infrastructure
+
+The global layer includes core services such as Traefik (Ingress), Cert-Manager (SSL), ArgoCD (GitOps) and the
+Monitoring Stack.
+
+```
+cd infra
+terraform init
+
+# Targeted apply for Cert-Manager to ensure CRD availability
+terraform apply -target=helm_release.cert_manager
+
+# Apply remaining infrastructure components
+terraform apply
+```
+
+### 4.3 Environment-Specific Resources
+
+Each environment (dev/prod) requires a dedicated database setup and namespace configuration.
+
+```
+# Setup dev Environment
+cd infrastructure/environments/dev && terraform init && terraform apply
+
+# Setup prod Environment
+cd infrastructure/environments/prod && terraform init && terraform apply
+```
+
+### 4.4 Bootstrap GitOps
+
+The final step uses the **App-of-Apps** pattern to trigger ArgoCD. This synchronizes all application manifests defined
+in
+the repository.
+
+```
+cd infrastructure
+kubectl apply -f argocd/app-of-apps.yaml
+```
+
 ---
 
 ## 5. How to deploy dev & prod
 
-**Frontend environment configuration**
+This project follows a "Build Once, Deploy Anywhere" strategy. The same Docker image is used for all environments, while
+configuration is injected dynamically at runtime.
 
-- To inject environment-specific variables into the Angular frontend, a dynamic `assets/env.js` file is used
-- This file is referenced in `petclinic-angular/src/environments/environment.prod.ts`
-- In Kubernetes, the `assets/env.js` is overridden via a ConfigMap per environment
-- Example: `REST_API_URL` is dynamically injected for dev / prod environments
-- This approach avoids hardcoding environment variables in the application and enables reusable deployments
+### 5.1 Environment Separation
 
----
+Environments are isolated using **Kubernetes Namespaces** (`dev` and `prod`). Separation of configuration is handled
+via:
 
-**Persistence & restart validation**
-Validation steps
+- **Helm Values**: Dedicated `values-dev.yaml` and `values-prod.yaml` files for environment-specific replicas,
+  resources and labels.
+- **Terraform**: Manages the namespace-specific infrastructure (e.g., Database instances).
 
-- Delete PostgreSQL pod manually
-- Restart k3s / cluster node
-- Verify that:
-    - Same PVC is reattached
-    - Database data is preserved
+### 5.2 Dynamic Frontend Configuration (Highlight)
 
-Outcome
+To avoid hardcoding API URLs into the Angular build, a dynamic injection pattern is used:
 
-- PVC remains bound
-- PostgreSQL restarts with existing data intact
+1. **assets/env.js**: The application loads a script at startup that defines global variables.
+2. **ConfigMap Injection**: In Kubernetes, this file is overridden by a ConfigMap specific to the environment.
+3. **Result**: The same Frontend image connects to `dev-api.baris.cloud-ip.cc` in the dev namespace and
+   `api.baris.cloud-ip.cc` in prod without a re-build.
 
----
+### 5.3 Deployment Workflow & Strategy
 
-- Multi-Environment Strategy: We use a "Build Once, Deploy Anywhere" approach. The same Helm charts and Terraform
-  modules are used for dev and prod.
-- Environment Injection: Environment-specific configurations are managed via values-dev.yaml and values-prod.yaml,
-  ensuring minimal duplication.
+The project follows a branch-based environment strategy to ensure stability and controlled releases.
+
+- `dev`:
+    - **Trigger**: Automated deployment occurs on every push to the `develop` branch.
+    - **Logic**: Continuous Integration (CI) runs tests and builds the image, followed by an immediate, automated update
+      of the development manifests. No manual intervention is required.
+
+- `prod`:
+    - **Trigger**: Deployment is initiated only by creating a Git Tag following the semantic versioning pattern (e.g.,
+      `v1.0.2`).
+    - **Manual Approval**: To prevent accidental changes, the pipeline includes a Manual Approval in GitHub Actions. A
+      team member must explicitly approve the update of the `values-prod.yaml` file before ArgoCD synchronizes the new
+      version to the production namespace.
+
+### 5.4 Persistence & Reliability
+
+The deployment is designed for state persistence. Even if a pod or node restarts:
+
+- **StatefulSets** ensure the PostgreSQL database retains its network identity.
+- **Persistent Volume Claims (PVC)** ensure that data remains intact and is re-attached to the new pod automatically.
 
 ## 6. CI/CD
 
-- Declarative Setup: All infrastructure and application states are defined declaratively in YAML/HCL. This allows for
-  fully automated, repeatable deployments and ensures that both environments stay in sync.
+The project utilizes a modular CI/CD pipeline built with **GitHub Actions**. It follows a strict DevSecOps approach,
+ensuring that only tested and scanned images reach the cluster.
 
+### 6.1 Pipeline Architecture
 
-- From slack requirements:
-    - Use different environment variables for each environment.
-    - Use separate configuration files or values for dev vs prod.
-    - Deploy dev automatically and production after approval (if using CI/CD).
-    - Document the differences in configuration.
+The pipeline is split into separate workflows for Frontend and Backend, utilizing **reusable workflows** to standardize
+the build and security processes.
+
+- **Continuous Testing**:
+    - **Backend**: Automated Maven unit tests (Java 21).
+    - **Frontend**: Headless Angular unit tests (Node 18).
+
+- **DevSecOps & Security Scanning**:
+    - **Snyk**: Scans code dependencies for known vulnerabilities (High severity threshold).
+    - **Trivy**: Performs container image scanning before the push, failing the build on `CRITICAL` or `HIGH` findings.
+
+- **Build & Push**:
+    - Utilizes **multi-stage Docker builds** via docker/build-push-action.
+    - Images are pushed to **Docker Hub** with dynamic tagging (`commit-SHA` for dev, `git-tag` for prod).
+
+### 6.2 Technical Implementation (GitOps)
+
+Following the strategy defined in **[Section 5.3](#53-deployment-workflow--strategy)**, the technical execution is
+handled
+as follows:
+
+- **Manifest Updates**: The pipeline uses `yq` to programmatically update image tags in the `values-dev.yaml`
+  (automated) or `values-prod.yaml` (after manual approval).
+
+- **Pull-based Deployment**: ArgoCD monitors the infrastructure repository. Once the pipeline commits a new tag, ArgoCD
+  detects the drift and synchronizes the cluster state automatically. This ensures the Git repository remains the "
+  Single Source of Truth."
+
+## 6.3 GitOps Synchronization (ArgoCD)
+
+Once the CI pipeline updates the image tags in the infrastructure repository, **ArgoCD** (following the Pull-model)
+detectsthe change and synchronizes the cluster state. This ensures a "Single Source of Truth" in Git and eliminates
+manual kubectl interventions.
 
 ---
 
@@ -149,7 +245,7 @@ Operator** Helm Chart (`kube-prometheus-stack`).
 
 ### Key Components
 
-- **Infrastructure Monitoring**: Automated collection of CPU, Memory, and Network metrics via `node-exporter`.
+- **Infrastructure Monitoring**: Automated collection of CPU, Memory and Network metrics via `node-exporter`.
 - **Database Monitoring**: Integration of `prometheus-postgres-exporter` to track PostgreSQL health and performance.
 - **Monitoring Availability FE/BE**: Deployment of the Prometheus Blackbox Exporter to perform external HTTP/HTTPS
   health checks on Frontend and Backend endpoints.
@@ -298,7 +394,7 @@ kubectl apply -f argocd/app-of-apps.yaml
 The deployment is organized into three layers to strictly separate the global platform from environment-specific
 resources:
 
-**1. Base Layer (Manual)**: Provisioning of the VM and installation of k3s, SOPS/Age for secret decryption, and the
+**1. Base Layer (Manual)**: Provisioning of the VM and installation of k3s, SOPS/Age for secret decryption and the
 Terraform CLI.
 
 **2. Global Cluster Services & GitOps Control (infra/)**: Running terraform apply in this folder sets up the cluster's "
