@@ -19,7 +19,7 @@ ingress:
         - api.baris.cloud-ip.cc
 
 autoscaling:
-  enabled: false
+  enabled: true
   minReplicas: 2
   maxReplicas: 10
   targetCPUUtilizationPercentage: 50
