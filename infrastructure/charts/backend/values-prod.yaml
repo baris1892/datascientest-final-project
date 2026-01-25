@@ -2,7 +2,7 @@ image:
   repository: baris1892/datascientest-final-project-petclinic-rest
   pullPolicy: Always
   tag: "v0.0.8"
-replicaCount: 1
+replicaCount: 2
 ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-staging
@@ -17,3 +17,9 @@ ingress:
     - secretName: backend-prod-tls
       hosts:
         - api.baris.cloud-ip.cc
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50

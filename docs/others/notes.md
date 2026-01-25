@@ -60,3 +60,11 @@ kubectl -n dev logs -f -l job-name=manual-backup-test
 # delete manually created job again 
 kubectl -n dev delete job manual-backup-test
 ```
+
+#### High Availability
+
+Generate load:  
+`kubectl run load-generator -n prod -i --tty --rm --image=busybox -- /bin/sh -c "while true; do wget -q -O- http://backend.prod.svc.cluster.local:9966/petclinic/actuator/health > /dev/null 2>&1; done"`
+
+Check HPA:  
+`kubectl get hpa -n prod`
