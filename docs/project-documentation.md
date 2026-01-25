@@ -323,85 +323,77 @@ Security is shifted left by integrating automated scans into the GitHub Actions 
 - **Backup Automation**: A Kubernetes CronJob triggers a `pg_dump` daily at 02:00 AM.
 - **Storage & Retention**: Dumps are stored on the host VM via `hostPath` at `/home/backups/database`. A retention
   policy of 7 days is enforced within the backup script.
-- **Recovery Plan**: To ensure a consistent state during recovery and avoid 'already exists' errors, the public schema
-  is dropped and recreated before the restore. This guarantees that any data added after the backup or manual schema
-  changes are completely removed, resulting in a 1:1 copy of the backed-up state.
+- **Recovery Procedure**: To ensure a clean state, the public schema is dropped and recreated before restoring the dump.
   ```
-  # Extract credentials from secret
+  # 1. Extract credentials from secret
   export PGUSER=$(kubectl get secret database-db-secret -n dev -o jsonpath="{.data.POSTGRES_USER}" | base64 --decode)
   export PGDATABASE=$(kubectl get secret database-db-secret -n dev -o jsonpath="{.data.POSTGRES_DB}" | base64 --decode)
   export PGPASSWORD=$(kubectl get secret database-db-secret -n dev -o jsonpath="{.data.POSTGRES_PASSWORD}" | base64 --decode)
   
-  # 1. Delete schema and recreate it
+  # 2. Delete schema and recreate it
   # We pass PGPASSWORD into the pod environment so psql can use it
   kubectl exec -i database-db-0 -n dev -- env PGPASSWORD=$PGPASSWORD psql -U $PGUSER -d $PGDATABASE -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
   
-  # 2. Restore DB based on DB Dump
+  # 3. Restore DB based on DB Dump
   gzip -d -c /home/baris/backups/database/db_dump_2026-01-10_11-52-40.sql.gz | kubectl exec -i database-db-0 -n dev -- env PGPASSWORD=$PGPASSWORD psql -U $PGUSER -d $PGDATABASE
   ```
 - Production note: In a production environment, backups would be stored on external object storage (e.g. AWS S3).
 
-### 9.2 Recover in case of Container or Node Failure
+### 9.2 Self-Healing & Node Failure
 
-- **Container Failure**: Kubernetes monitors container health via Liveness/Readiness probes. If a container crashes, K8s
-  automatically restarts it (self-healing).
-- **Node Failure Strategy**:
-    - **Current State**: The project currently operates on a single-node k3s cluster. A node failure would result in
-      downtime.
-    - **Recovery Procedure**: In case of a node failure, the VM must be restarted. Since all components are defined via
-      IaC (Terraform) and Helm, the cluster can be redeployed from scratch within minutes if the hardware is lost.
-    - **Scalability Note**: In a multi-node production environment, Kubernetes would automatically reschedule pods to
-      healthy nodes (self-healing).
+The system leverages Kubernetes' native observability to handle failures:
 
-### 9.3 Infrastructure Deployment (IaC) (STATUS: TODO)
+- **Container Failure**: Liveness and Readiness probes trigger automatic restarts (self-healing) if a service becomes
+  unresponsive.
 
-#### TODO: Write down commands:
+- **Node Failure**: As the project currently runs on a single-node k3s cluster, a hardware failure requires a VM restart
+  or redeployment via IaC (Terraform). In a multi-node environment, K8s would automatically reschedule pods to healthy
+  nodes.
+
+### 9.3 Infrastructure Deployment (IaC)
+
+In case of a total system loss, the infrastructure is designed to be reconstructed from scratch using a layered
+Terraform & GitOps approach. This ensures that the environment is reproducible and documented as code.
+
+**Recovery Execution:**
 
 ```
-# Setup global "infra" config like Traefik, Cert-Manager, ArgoCD, Monitoring
-cd infra
-terraform init
-terraform apply -target=helm_release.cert_manager
-terraform apply
+# 1. Global Cluster Services (Ingress, SSL, GitOps)
+cd infra && terraform init && terraform apply
 
-# configure SOPS key
-mkdir -p ~/.config/sops/age
-cp /home/ubuntu/infrastructure/age.key.dist ~/.config/sops/age/keys.txt
-chmod 600 ~/.config/sops/age/keys.txt
+# 2. Environment Setup (Namespaces, Databases, Secrets)
+cd ../environments/dev  && terraform apply
+cd ../environments/prod && terraform apply
 
-# setup DB for namespace dev & prod
-cd infrastructure/environments/dev;  terraform init; terraform apply
-cd infrastructure/environments/prod; terraform init; terraform apply
-
-# Execute ArgoCD `app-of-apps.yaml`
-cd infrastructure
+# 3. Trigger Application Sync
 kubectl apply -f argocd/app-of-apps.yaml
 ```
 
-The deployment is organized into three layers to strictly separate the global platform from environment-specific
-resources:
+**Architecture Layers:**
 
-**1. Base Layer (Manual)**: Provisioning of the VM and installation of k3s, SOPS/Age for secret decryption and the
-Terraform CLI.
+- **1. Base Layer (Manual)**: Provisioning of the VM and installation of k3s, SOPS/Age for secret decryption and the
+  Terraform CLI.
 
-**2. Global Cluster Services & GitOps Control (infra/)**: Running terraform apply in this folder sets up the cluster's "
-Control Plane". This layer is environment-agnostic and manages the global state:
+- **2. Global Cluster Services & GitOps Control (infra/)**: Running terraform apply in this folder sets up the
+  cluster's "
+  Control Plane". This layer is environment-agnostic and manages the global state:
 
-- Traefik & Cert-Manager: Handling ingress and SSL for the entire cluster.
-- ArgoCD: Installation of the GitOps Controller.
-- ArgoCD Application Resources: Definition of the "App-of-Apps" pattern. Here, the links between the Git repository and
-  the various environments (dev, prod) are established.
+    - Traefik & Cert-Manager: Handling ingress and SSL for the entire cluster.
+    - ArgoCD: Installation of the GitOps Controller.
+    - ArgoCD Application Resources: Definition of the "App-of-Apps" pattern. Here, the links between the Git repository
+      and
+      the various environments (dev, prod) are established.
 
-**3. Application Environments (environments/)**: Running terraform apply in environments/dev or environments/prod
-provisions only the dedicated resources for that specific stage:
+- **3. Application Environments (environments/)**: Running terraform apply in environments/dev or environments/prod
+  provisions only the dedicated resources for that specific stage:
+    - Namespace: Logical isolation for the environment.
+    - Stateful Infrastructure: Provisioning of the Database (PostgreSQL) and the injection of environment-specific
+      secrets (
+      e.g., DB credentials) via SOPS.
 
-- Namespace: Logical isolation for the environment.
-- Stateful Infrastructure: Provisioning of the Database (PostgreSQL) and the injection of environment-specific secrets (
-  e.g., DB credentials) via SOPS.
-
-**4. GitOps Synchronization**: Once the infrastructure is ready, ArgoCD (provisioned in the global layer) detects the
-new namespace and its requirements. It automatically synchronizes the stateless applications (Frontend, Backend) and
-CronJobs from the charts/ folder into the target namespace.
+- **4. GitOps Synchronization**: Once the infrastructure is ready, ArgoCD (provisioned in the global layer) detects the
+  new namespace and its requirements. It automatically synchronizes the stateless applications (Frontend, Backend) and
+  CronJobs from the charts/ folder into the target namespace.
 
 ### 9.4 How to roll back to a previous version
 
