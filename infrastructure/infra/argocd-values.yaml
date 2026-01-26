@@ -1,3 +1,6 @@
+global:
+  domain: argocd.baris.cloud-ip.cc
+
 server:
   service:
     type: ClusterIP
@@ -6,12 +9,8 @@ server:
     enabled: true
     ingressClassName: traefik
     annotations:
-      # use https entrypoint
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    hosts:
-      - argocd.baris.cloud-ip.cc
-    # leave it empty so cert manager doesn't look for certificates
-    tls: []
+    tls: [ ]
 
 configs:
   params:
