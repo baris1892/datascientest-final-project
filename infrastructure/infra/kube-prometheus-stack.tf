@@ -206,4 +206,6 @@ resource "helm_release" "promtail" {
       }
     })
   ]
+
+  depends_on = [helm_release.loki]
 }
