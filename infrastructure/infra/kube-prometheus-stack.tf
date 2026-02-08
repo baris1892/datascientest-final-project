@@ -189,3 +189,21 @@ resource "helm_release" "loki" {
   ]
 }
 
+resource "helm_release" "promtail" {
+  name       = "promtail"
+  repository = "https://grafana.github.io/helm-charts"
+  chart      = "promtail"
+  namespace  = kubernetes_namespace.monitoring.metadata[0].name
+  version    = "6.16.6"
+
+  values = [
+    yamlencode({
+      config = {
+        clients = [{
+          # URL to the Loki Gateway
+          url = "http://loki-gateway/loki/api/v1/push"
+        }]
+      }
+    })
+  ]
+}

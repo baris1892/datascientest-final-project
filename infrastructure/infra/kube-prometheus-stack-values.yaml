@@ -21,6 +21,16 @@ grafana:
       label: grafana_dashboard
       labelValue: "1"
 
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      uid: loki
+      url: http://loki-gateway.monitoring.svc.cluster.local
+      access: proxy
+      jsonData:
+        maxLines: 1000
+
+
 # Prometheus configuration for data collection and storage
 prometheus:
   prometheusSpec:
