@@ -52,12 +52,13 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/maven-3-jdk-21@master
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: Run Snyk Test
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high petclinic-rest
+        run: snyk test petclinic-rest --severity-threshold=high
 
   security-scan:
     name: Trivy Container Scan
