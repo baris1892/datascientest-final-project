@@ -3,10 +3,10 @@ name: Backend CI/CD
 on:
   push:
     # 1. Trigger for DEV: Only on develop and only if BE code changed
-    branches:
-      - develop
-    paths:
-      - 'petclinic-rest/**'
+#    branches:
+#      - develop
+#    paths:
+#      - 'petclinic-rest/**'
 
   # 2. Trigger for PROD: Always on version tags, regardless of paths
   # This allows you to tag ANY commit and trigger a release
