@@ -16,6 +16,8 @@
 
 package org.springframework.samples.petclinic.rest.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.samples.petclinic.mapper.PetMapper;
@@ -40,6 +42,8 @@ import java.util.List;
 @RequestMapping("api")
 public class PetRestController implements PetsApi {
 
+    private static final Logger log = LoggerFactory.getLogger(PetRestController.class);
+
     private final ClinicService clinicService;
 
     private final PetMapper petMapper;
@@ -52,10 +56,12 @@ public class PetRestController implements PetsApi {
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
     @Override
     public ResponseEntity<PetDto> getPet(Integer petId) {
-        System.out.println("test7");
+        log.info("Searching pet with id={}", petId);
 
         PetDto pet = petMapper.toPetDto(this.clinicService.findPetById(petId));
         if (pet == null) {
+            log.error("Pet with id={} not found", petId);
+
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(pet, HttpStatus.OK);
