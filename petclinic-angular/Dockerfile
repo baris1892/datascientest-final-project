@@ -1,5 +1,5 @@
 ARG DOCKER_HUB="docker.io"
-ARG NGINX_VERSION="1.25-alpine"
+ARG NGINX_VERSION="1.27-alpine"
 ARG NODE_VERSION="18-alpine"
 
 # -----------------------------
@@ -22,6 +22,8 @@ RUN echo "registry = \"$NPM_REGISTRY\"" > /workspace/.npmrc && \
 # Stage 2: Runtime
 # -----------------------------
 FROM $DOCKER_HUB/library/nginx:$NGINX_VERSION AS runtime
+
+RUN apk update && apk upgrade --no-cache
 
 # Copy our custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
