@@ -24,9 +24,8 @@ grafana:
   additionalDataSources:
     - name: Loki
       type: loki
-      uid: loki
-      url: http://loki-gateway.monitoring.svc.cluster.local
       access: proxy
+      url: http://loki-gateway.monitoring.svc.cluster.local
       jsonData:
         maxLines: 1000
 
@@ -76,8 +75,8 @@ alertmanager:
     route:
       group_by: [ 'alertname', 'env' ]
       group_wait: 10s       # wait before sending the first notification
-      group_interval: 10s   # wait between grouped alerts
-      repeat_interval: 30s  # wait before repeating the same alert
+      group_interval: 60s   # wait between grouped alerts
+      repeat_interval: 60s  # wait before repeating the same alert
       receiver: 'mailpit-notifications'
       routes:
         - matchers:
@@ -89,6 +88,11 @@ alertmanager:
           - to: 'admin@baris.cloud-ip.cc'
             send_resolved: true
             require_tls: false
+            headers:
+              Subject: >-
+                [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] 
+                {{ .GroupLabels.alertname }} 
+                ({{ or .CommonLabels.env .CommonLabels.namespace "system" }})
       # used to silence some alerts, so nothing happens
       - name: 'null'
 
@@ -110,6 +114,7 @@ additionalPrometheusRulesMap:
             labels:
               severity: critical
               component: database
+              env: "{{ $labels.namespace }}"
             annotations:
               summary: "Health Alert: Database ({{ $labels.namespace }})"
               description: "The Postgres database in namespace {{ $labels.namespace }} is unreachable."
