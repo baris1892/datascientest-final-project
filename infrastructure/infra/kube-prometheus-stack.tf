@@ -189,6 +189,10 @@ resource "helm_release" "loki" {
   ]
 }
 
+# note: we might need to adjust: /etc/sysctl.conf
+# and add the following to get rid of "too many open files":
+# fs.inotify.max_user_instances = 1024
+# fs.inotify.max_user_watches = 524288
 resource "helm_release" "alloy" {
   name       = "alloy"
   namespace  = kubernetes_namespace.monitoring.metadata[0].name

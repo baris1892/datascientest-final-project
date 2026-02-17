@@ -72,24 +72,24 @@ layers:
 
 ## 3. Tech Stack
 
-| Category             | Technology              | Usage & Purpose                                                   |
-|----------------------|-------------------------|-------------------------------------------------------------------|
-| **Frontend**	        | Angular                 | Single Page Application (SPA) for the user interface.             |
-| **Backend**          | Spring Boot             | RESTful API handling business logic and database interactions.    |
-| **Database**         | PostgreSQL              | Relational database for persistent storage of application data.   |
-| **Containerization** | Docker                  | Creating docker images using multi-stage builds.                  |
-| **Orchestration**    | k3s (Kubernetes)        | Lightweight Kubernetes distribution running on Proxmox VM.        |
-| **Infrastructure**   | Terraform               | Infrastructure as Code (IaC) for provisioning K8s resources.      |
-| **CI/CD Pipeline**   | GitHub Actions          | Automated build, test and containerization workflow.              |
-| **GitOps**           | ArgoCD                  | Declarative continuous delivery and cluster synchronization.      |
-| **Security Scan**    | Trivy                   | Vulnerability scanning for Docker images within the pipeline.     |
-| **Secret Mgmt.**     | SOPS & age              | Encryption of sensitive data (Secrets) within the Git repository. |
-| **Certificates**     | cert-manager            | Automated HTTPS/TLS via Let's Encrypt.                            |
-| **Ingress**          | Traefik                 | HTTP/HTTPS ingress and routing into the Kubernetes cluster.       |
-| **Observability**    | Prometheus              | Metric collection and monitoring of cluster and app health.       |
-| **Visualization**    | Grafana                 | Centralized dashboards for infrastructure and app metrics.        |
-| **Logging**          | Grafana Loki & Promtail | Centralized log aggregation and correlation with metrics.         |
-| **Alerting**         | Alertmanager            | Alert routing and notification based on Prometheus rules.         |
+| Category             | Technology           | Usage & Purpose                                                   |
+|----------------------|----------------------|-------------------------------------------------------------------|
+| **Frontend**	        | Angular              | Single Page Application (SPA) for the user interface.             |
+| **Backend**          | Spring Boot          | RESTful API handling business logic and database interactions.    |
+| **Database**         | PostgreSQL           | Relational database for persistent storage of application data.   |
+| **Containerization** | Docker               | Creating docker images using multi-stage builds.                  |
+| **Orchestration**    | k3s (Kubernetes)     | Lightweight Kubernetes distribution running on Proxmox VM.        |
+| **Infrastructure**   | Terraform            | Infrastructure as Code (IaC) for provisioning K8s resources.      |
+| **CI/CD Pipeline**   | GitHub Actions       | Automated build, test and containerization workflow.              |
+| **GitOps**           | ArgoCD               | Declarative continuous delivery and cluster synchronization.      |
+| **Security Scan**    | Trivy                | Vulnerability scanning for Docker images within the pipeline.     |
+| **Secret Mgmt.**     | SOPS & age           | Encryption of sensitive data (Secrets) within the Git repository. |
+| **Certificates**     | cert-manager         | Automated HTTPS/TLS via Let's Encrypt.                            |
+| **Ingress**          | Traefik              | HTTP/HTTPS ingress and routing into the Kubernetes cluster.       |
+| **Observability**    | Prometheus           | Metric collection and monitoring of cluster and app health.       |
+| **Visualization**    | Grafana              | Centralized dashboards for infrastructure and app metrics.        |
+| **Logging**          | Grafana Loki & Alloy | Centralized log aggregation and correlation with metrics.         |
+| **Alerting**         | Alertmanager         | Alert routing and notification based on Prometheus rules.         |
 
 ---
 
@@ -257,7 +257,7 @@ Operator** Helm Chart (`kube-prometheus-stack`).
 - **Alerting Pipeline**: Custom `PrometheusRules` to trigger alerts for critical failures (e.g. database downtime
   or unreachable services), enabling early detection and fast incident response.
 - **Logs**: Centralized log aggregation using **Grafana Loki**, collecting container logs from all Kubernetes
-  workloads via **Promtail**. Logs are visualized in Grafana and correlated with Prometheus metrics, enabling
+  workloads via **Alloy**. Logs are visualized in Grafana and correlated with Prometheus metrics, enabling
   efficient debugging and root cause analysis (e.g. inspecting application logs after alert triggers).
   Loki was chosen over traditional ELK stacks due to its label-based indexing model, providing a scalable and
   cost-efficient logging solution suitable for production environments. Logs can be filtered by namespace,
