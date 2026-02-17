@@ -189,23 +189,14 @@ resource "helm_release" "loki" {
   ]
 }
 
-resource "helm_release" "promtail" {
-  name       = "promtail"
-  repository = "https://grafana.github.io/helm-charts"
-  chart      = "promtail"
+resource "helm_release" "alloy" {
+  name       = "alloy"
   namespace  = kubernetes_namespace.monitoring.metadata[0].name
-  version    = "6.16.6"
-
+  repository = "https://grafana.github.io/helm-charts"
+  chart      = "alloy"
+  version    = "1.6.0"
   values = [
-    yamlencode({
-      config = {
-        clients = [{
-          # URL to the Loki Gateway
-          url = "http://loki-gateway/loki/api/v1/push"
-        }]
-      }
-    })
+    file("${path.module}/alloy-values.yaml")
   ]
-
   depends_on = [helm_release.loki]
 }
