@@ -166,7 +166,7 @@ via:
   resources and labels.
 - **Terraform**: Manages the namespace-specific infrastructure (e.g., Database instances).
 
-### 5.2 Dynamic Frontend Configuration (Highlight)
+### 5.2 Dynamic Frontend Configuration
 
 To avoid hardcoding API URLs into the Angular build, a dynamic injection pattern is used:
 
