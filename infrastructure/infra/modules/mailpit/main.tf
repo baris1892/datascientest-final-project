@@ -3,7 +3,7 @@ resource "helm_release" "mailpit" {
   repository = "https://jouve.github.io/charts"
   chart      = "mailpit"
   version    = "0.31.0"
-  namespace  = kubernetes_namespace.monitoring.metadata[0].name
+  namespace = var.monitoring_namespace
 
   values = [
     file("${path.module}/mailpit-values.yaml")

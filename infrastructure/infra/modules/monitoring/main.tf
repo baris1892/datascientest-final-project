@@ -11,7 +11,6 @@ resource "helm_release" "prometheus_stack" {
   namespace  = kubernetes_namespace.monitoring.metadata[0].name
   version    = "81.0.0"
 
-  # Hier binden wir die externe Konfigurationsdatei ein
   values = [
     file("${path.module}/kube-prometheus-stack-values.yaml")
   ]
@@ -189,10 +188,6 @@ resource "helm_release" "loki" {
   ]
 }
 
-# note: we might need to adjust: /etc/sysctl.conf
-# and add the following to get rid of "too many open files":
-# fs.inotify.max_user_instances = 1024
-# fs.inotify.max_user_watches = 524288
 resource "helm_release" "alloy" {
   name       = "alloy"
   namespace  = kubernetes_namespace.monitoring.metadata[0].name

@@ -121,7 +121,7 @@ cd infra
 terraform init
 
 # Targeted apply for Cert-Manager to ensure CRD availability
-terraform apply -target=helm_release.cert_manager
+terraform apply -target=module.cert-manager.helm_release.cert_manager
 
 # Apply remaining infrastructure components
 terraform apply
