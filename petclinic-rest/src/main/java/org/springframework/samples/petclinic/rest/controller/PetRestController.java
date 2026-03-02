@@ -58,11 +58,11 @@ public class PetRestController implements PetsApi {
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
     @Override
     public ResponseEntity<PetDto> getPet(Integer petId) {
-        log.info("Searching pet {}", kv("pet_id", petId));
+        log.info("Final Project Demo ==> Searching pet {}", kv("pet_id", petId));
 
         PetDto pet = petMapper.toPetDto(this.clinicService.findPetById(petId));
         if (pet == null) {
-            log.error("Pet with id={} not found", petId);
+            log.error("Final Project Demo ==> Pet with id={} not found", petId);
 
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
